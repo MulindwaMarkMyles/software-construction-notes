@@ -18,5 +18,20 @@ The application will have to meet basic user needs in regards to notes creation 
 •	Scalability: the app should be able to contain hundreds of notes 
 •	Compatibility: the app should be compatible with Android 13-14
 •	Capacity: it should be a lightweight application barely exceeding 100MBs of  storage 
+4. Acceptance Criteria
+4.1 Create/Edit/Delete notes:
+•	Users can create, edit and delete notes
+•	A note should have characters to be saved i.e. an empty note cannot be saved
+4.2 Organising notes
+•	Notes created should be arranged chronologically by dates created and dates modified (after editing)
+•	Arranging notes by tags and categories, should also be possible
+4.3 Collaboration
+•	Notes should be able to be shared
+4.4 Search Function
+•	Notes should be able to be searched for using keywords
+
+
+	
+
 
 
