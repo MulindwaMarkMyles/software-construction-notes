@@ -1,93 +1,139 @@
 package com.example.notes;
 
-// NoteDetailActivity.java
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class NoteDetailActivity extends AppCompatActivity {
 
-    private EditText noteHeadingEditText;
-    private EditText noteDetailsEditText;
-    private Button saveNoteButton;
-
+    private TextInputEditText noteHeadingEditText, noteDetailsEditText;
+    private MaterialButton updateButton, deleteButton;
     private long noteId;
+    private DatabaseHelper databaseHelper;
+    private Note note;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_detail);
 
+        // Initialize views
         noteHeadingEditText = findViewById(R.id.noteHeadingEditText);
         noteDetailsEditText = findViewById(R.id.noteDetailsEditText);
-        saveNoteButton = findViewById(R.id.saveNoteButton);
+        updateButton = findViewById(R.id.updateButton);
+        deleteButton = findViewById(R.id.deleteButton);
+        toolbar = findViewById(R.id.toolbar);
 
-        // Get noteId from the intent (if available)
-        noteId = getIntent().getLongExtra("noteId", -1);
+        // Set up toolbar
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        if (noteId != -1) {
-            // Load existing note details for editing
-            loadNoteDetails(noteId);
+        // Initialize database helper
+        databaseHelper = DatabaseHelper.getInstance(this);
+
+        // Get note ID from intent
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("noteId")) {
+            noteId = intent.getLongExtra("noteId", -1);
+            if (noteId != -1) {
+                // Load existing note
+                loadNote();
+                // Update button text
+                updateButton.setText("Update");
+                // Show delete button
+                deleteButton.setVisibility(View.VISIBLE);
+            } else {
+                // Create new note
+                createNewNote();
+            }
+        } else {
+            // Create new note
+            createNewNote();
         }
 
-        // Set click listener for saving a note
-        saveNoteButton.setOnClickListener(new View.OnClickListener() {
+        // Set up button listeners
+        updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
                 saveNote();
+            }
+        });
+
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteNote();
             }
         });
     }
 
-    private void loadNoteDetails(long noteId) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        Note note = databaseHelper.getNoteById(noteId);
+    private void createNewNote() {
+        // Initialize a new empty note
+        note = new Note(-1, "", "", "Personal", System.currentTimeMillis(), 0);
+        setTitle("Create New Note");
+        // Update button text
+        updateButton.setText("Save");
+        // Hide delete button (can't delete a note that doesn't exist yet)
+        deleteButton.setVisibility(View.GONE);
+    }
 
+    private void loadNote() {
+        note = databaseHelper.getNoteById((int) noteId);
         if (note != null) {
-            noteHeadingEditText.setText(note.getHeading());
-            noteDetailsEditText.setText(note.getDetails());
+            noteHeadingEditText.setText(note.getTitle());
+            noteDetailsEditText.setText(note.getContent());
+            setTitle("Edit: " + note.getTitle());
         }
     }
 
     private void saveNote() {
-        String heading = noteHeadingEditText.getText().toString();
-        String details = noteDetailsEditText.getText().toString();
+        String heading = noteHeadingEditText.getText().toString().trim();
+        String details = noteDetailsEditText.getText().toString().trim();
 
-        // Validate input
-        if (TextUtils.isEmpty(heading)) {
-            Toast.makeText(this, "Please enter a heading", Toast.LENGTH_SHORT).show();
+        if (heading.isEmpty()) {
+            noteHeadingEditText.setError("Heading cannot be empty");
             return;
         }
 
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        // Update note properties
+        note.setTitle(heading);
+        note.setContent(details);
+        note.setTimestamp(System.currentTimeMillis());
 
-        if (noteId == -1) {
-            // New note
-            long newNoteId = databaseHelper.insertNote(heading, details);
-            if (newNoteId != -1) {
-                Toast.makeText(this, "Note saved successfully", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Error saving note", Toast.LENGTH_SHORT).show();
-            }
+        // Save to database
+        long id = databaseHelper.saveNote(note);
+        if (id > 0) {
+            Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
+            finish();
         } else {
-            // Existing note
-            boolean updated = databaseHelper.updateNote(noteId, heading, details);
-            if (updated) {
-                Toast.makeText(this, "Note updated successfully", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Error updating note", Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(this, "Failed to save note", Toast.LENGTH_SHORT).show();
         }
+    }
 
-        // Navigate back to the main page
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
+    private void deleteNote() {
+        if (note != null) {
+            databaseHelper.deleteNote(note);
+            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
-

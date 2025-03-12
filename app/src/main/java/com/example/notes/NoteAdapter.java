@@ -1,100 +1,140 @@
 package com.example.notes;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-public class NoteAdapter extends ArrayAdapter<Note> {
+public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
     private Context context;
-    private List<Note> notes;
-    private OnNoteClickListener onNoteClickListener;
+    private List<Note> notesList;
+    private OnItemClickListener listener;
 
-    public NoteAdapter(Context context, List<Note> notes, OnNoteClickListener onNoteClickListener) {
-        super(context, 0, notes);
+    public interface OnItemClickListener {
+        void onItemClick(Note note);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
+    public NoteAdapter(Context context, List<Note> notesList) {
         this.context = context;
-        this.notes = notes;
-        this.onNoteClickListener = onNoteClickListener;
+        this.notesList = notesList;
+    }
+
+    public void updateList(List<Note> newList) {
+        this.notesList = newList;
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        final Note note = getItem(position);
+    public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_note, parent, false);
+        return new NoteViewHolder(view);
+    }
 
-        if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+    @Override
+    public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
+        Note note = notesList.get(position);
+
+        // Set text with null checks to prevent crashes
+        holder.titleTextView.setText(note.getTitle() != null ? note.getTitle() : "");
+
+        // Limit content preview length to prevent UI issues
+        String contentPreview = note.getContent() != null ? note.getContent() : "";
+        if (contentPreview.length() > 100) {
+            contentPreview = contentPreview.substring(0, 97) + "...";
         }
+        holder.contentPreview.setText(contentPreview);
 
-        TextView textView = convertView.findViewById(android.R.id.text1);
-        textView.setText(note.getHeading());
+        holder.dateTextView.setText(formatDate(note.getTimestamp()));
 
-        // Set click listener for editing a note
-        convertView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (onNoteClickListener != null) {
-                    onNoteClickListener.onNoteClick(note);
+        // Set category
+        holder.categoryChip.setText(note.getCategory());
+
+        // Set category color
+        int categoryColor;
+        switch (note.getCategory()) {
+            case "Personal":
+                categoryColor = R.color.category_personal;
+                break;
+            case "Work":
+                categoryColor = R.color.category_work;
+                break;
+            case "Study":
+                categoryColor = R.color.category_study;
+                break;
+            default:
+                categoryColor = R.color.category_misc;
+                break;
+        }
+        holder.categoryChip.setChipBackgroundColorResource(categoryColor);
+
+        // Set priority indicator
+        switch (note.getPriority()) {
+            case 2: // High
+                holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
+                holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_high));
+                break;
+            case 1: // Medium
+                holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
+                holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_medium));
+                break;
+            case 0: // Low
+                holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
+                holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_low));
+                break;
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return notesList.size();
+    }
+
+    private String formatDate(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM d", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
+
+    class NoteViewHolder extends RecyclerView.ViewHolder {
+        TextView titleTextView, contentPreview, dateTextView;
+        Chip categoryChip;
+        ImageView priorityIndicator;
+
+        public NoteViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            titleTextView = itemView.findViewById(R.id.note_title);
+            contentPreview = itemView.findViewById(R.id.note_content_preview);
+            dateTextView = itemView.findViewById(R.id.note_date);
+            categoryChip = itemView.findViewById(R.id.note_category);
+            priorityIndicator = itemView.findViewById(R.id.note_priority);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    if (listener != null && position != RecyclerView.NO_POSITION) {
+                        listener.onItemClick(notesList.get(position));
+                    }
                 }
-            }
-        });
-
-        // Set long click listener for deleting a note
-        convertView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                showDeleteDialog(position);
-                return true;
-            }
-        });
-
-        return convertView;
-    }
-
-    private void showDeleteDialog(final int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("Are you sure you want to delete this note?")
-                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        Note noteToDelete = getItem(position);
-                        deleteNoteFromDatabase(noteToDelete.getId());
-                        notes.remove(noteToDelete);
-                        notifyDataSetChanged();
-                        showToast("Note deleted");
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // User canceled the operation
-                    }
-                })
-                .show();
-    }
-
-    private void deleteNoteFromDatabase(long noteId) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(context);
-        databaseHelper.deleteNoteById(noteId);
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-    }
-
-    // Interface for handling note clicks
-    public interface OnNoteClickListener {
-        void onNoteClick(Note note);
+            });
+        }
     }
 }

@@ -1,172 +1,265 @@
 package com.example.notes;
-// DatabaseHelper.java
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
-
+    // Database Info
     private static final String DATABASE_NAME = "notes.db";
     private static final int DATABASE_VERSION = 1;
 
-    public static final String TABLE_NOTES = "notes";
-    public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_HEADING = "heading";
-    public static final String COLUMN_DETAILS = "details";
+    // Table Names
+    private static final String TABLE_NOTES = "notes";
 
-    private static final String TABLE_CREATE =
-            "CREATE TABLE " + TABLE_NOTES + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_HEADING + " TEXT, " +
-                    COLUMN_DETAILS + " TEXT);";
+    // Note Table Columns
+    private static final String KEY_NOTE_ID = "id";
+    private static final String KEY_NOTE_TITLE = "title";
+    private static final String KEY_NOTE_CONTENT = "content";
+    private static final String KEY_NOTE_CATEGORY = "category";
+    private static final String KEY_NOTE_TIMESTAMP = "timestamp";
+    private static final String KEY_NOTE_PRIORITY = "priority";
 
-    public DatabaseHelper(Context context) {
+    // Singleton instance
+    private static DatabaseHelper instance;
+
+    public static synchronized DatabaseHelper getInstance(Context context) {
+        if (instance == null) {
+            instance = new DatabaseHelper(context.getApplicationContext());
+        }
+        return instance;
+    }
+
+    private DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(TABLE_CREATE);
+        String CREATE_NOTES_TABLE = "CREATE TABLE " + TABLE_NOTES + "("
+                + KEY_NOTE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_NOTE_TITLE + " TEXT,"
+                + KEY_NOTE_CONTENT + " TEXT,"
+                + KEY_NOTE_CATEGORY + " TEXT DEFAULT 'Personal',"
+                + KEY_NOTE_TIMESTAMP + " INTEGER,"
+                + KEY_NOTE_PRIORITY + " INTEGER DEFAULT 0"
+                + ")";
+        db.execSQL(CREATE_NOTES_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTES);
-        onCreate(db);
+        if (oldVersion != newVersion) {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTES);
+            onCreate(db);
+        }
     }
-    public void deleteNoteById(long noteId) {
-        SQLiteDatabase db = this.getWritableDatabase();
+
+    // Insert or update a note
+    public long saveNote(Note note) {
+        SQLiteDatabase db = getWritableDatabase();
+        long noteId = -1;
+
+        db.beginTransaction();
         try {
-            int deletedRows = db.delete(TABLE_NOTES, COLUMN_ID + " = ?",
-                    new String[]{String.valueOf(noteId)});
-            if (deletedRows > 0) {
-                // Note deleted successfully
+            ContentValues values = new ContentValues();
+            values.put(KEY_NOTE_TITLE, note.getTitle());
+            values.put(KEY_NOTE_CONTENT, note.getContent());
+            values.put(KEY_NOTE_CATEGORY, note.getCategory());
+            values.put(KEY_NOTE_TIMESTAMP, note.getTimestamp());
+            values.put(KEY_NOTE_PRIORITY, note.getPriority());
+
+            // Update or insert
+            if (note.getId() > 0) {
+                // Update existing note
+                db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
+                        new String[] { String.valueOf(note.getId()) });
+                noteId = note.getId();
             } else {
-                // Handle deletion failure
+                // Insert new note
+                noteId = db.insertOrThrow(TABLE_NOTES, null, values);
             }
-        } catch (SQLException e) {
-            // Handle the exception
+            db.setTransactionSuccessful();
         } finally {
-            db.close();
+            db.endTransaction();
         }
+
+        return noteId;
     }
-    public long insertNote(String heading, String details) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_HEADING, heading);
-        values.put(COLUMN_DETAILS, details);
 
-        long newRowId = -1;
-
+    // Delete a note
+    public void deleteNote(Note note) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
         try {
-            newRowId = db.insert(TABLE_NOTES, null, values);
-        } catch (SQLException e) {
-            // Handle the exception
+            db.delete(TABLE_NOTES, KEY_NOTE_ID + " = ?",
+                    new String[] { String.valueOf(note.getId()) });
+            db.setTransactionSuccessful();
         } finally {
-            db.close();
+            db.endTransaction();
         }
-
-        return newRowId;
     }
 
-    public boolean updateNote(long noteId, String heading, String details) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_HEADING, heading);
-        values.put(COLUMN_DETAILS, details);
-
-        int rowsAffected = -1;
-
-        try {
-            rowsAffected = db.update(TABLE_NOTES, values, COLUMN_ID + " = ?",
-                    new String[]{String.valueOf(noteId)});
-        } catch (SQLException e) {
-            // Handle the exception
-        } finally {
-            db.close();
-        }
-
-        return rowsAffected > 0;
-    }
-
+    // Get all notes
     public List<Note> getAllNotes() {
         List<Note> notes = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
 
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
         try {
-            Cursor cursor = db.query(
-                    TABLE_NOTES,
-                    new String[]{COLUMN_ID, COLUMN_HEADING, COLUMN_DETAILS},
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            );
-
+            cursor = db.rawQuery(NOTES_SELECT_QUERY, null);
             if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+
                 do {
-                    long id = cursor.getLong(cursor.getColumnIndex(COLUMN_ID));
-                    String heading = cursor.getString(cursor.getColumnIndex(COLUMN_HEADING));
-                    String details = cursor.getString(cursor.getColumnIndex(COLUMN_DETAILS));
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    String category = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
 
-                    Note note = new Note();
-                    note.setId(id);
-                    note.setHeading(heading);
-                    note.setDetails(details);
-
+                    Note note = new Note(id, title, content, category, timestamp, priority);
                     notes.add(note);
                 } while (cursor.moveToNext());
-
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
                 cursor.close();
             }
-        } catch (SQLException e) {
-            // Handle the exception
-        } finally {
-            db.close();
         }
 
         return notes;
     }
 
-    public Note getNoteById(long noteId) {
-        SQLiteDatabase db = this.getReadableDatabase();
+    // Get a single note by ID
+    public Note getNoteById(int noteId) {
         Note note = null;
 
+        SQLiteDatabase db = getReadableDatabase();
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ?",
+                TABLE_NOTES, KEY_NOTE_ID);
+
+        Cursor cursor = null;
         try {
-            Cursor cursor = db.query(
-                    TABLE_NOTES,
-                    new String[]{COLUMN_ID, COLUMN_HEADING, COLUMN_DETAILS},
-                    COLUMN_ID + " = ?",
-                    new String[]{String.valueOf(noteId)},
-                    null,
-                    null,
-                    null
-            );
-
+            cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { String.valueOf(noteId) });
             if (cursor != null && cursor.moveToFirst()) {
-                long id = cursor.getLong(cursor.getColumnIndex(COLUMN_ID));
-                String heading = cursor.getString(cursor.getColumnIndex(COLUMN_HEADING));
-                String details = cursor.getString(cursor.getColumnIndex(COLUMN_DETAILS));
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
 
-                note = new Note();
-                note.setId(id);
-                note.setHeading(heading);
-                note.setDetails(details);
+                int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                String category = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
 
+                note = new Note(id, title, content, category, timestamp, priority);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
                 cursor.close();
             }
-        } catch (SQLException e) {
-            // Handle the exception
-        } finally {
-            db.close();
         }
 
         return note;
+    }
+
+    // Get notes by category
+    public List<Note> getNotesByCategory(String category) {
+        List<Note> notes = new ArrayList<>();
+
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ? ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { category });
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    int id = cursor.getInt(cursor.getColumnIndex(KEY_NOTE_ID));
+                    String title = cursor.getString(cursor.getColumnIndex(KEY_NOTE_TITLE));
+                    String content = cursor.getString(cursor.getColumnIndex(KEY_NOTE_CONTENT));
+                    long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_NOTE_TIMESTAMP));
+                    int priority = cursor.getInt(cursor.getColumnIndex(KEY_NOTE_PRIORITY));
+
+                    Note note = new Note(id, title, content, category, timestamp, priority);
+                    notes.add(note);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return notes;
+    }
+
+    // Search notes by query
+    public List<Note> searchNotes(String query) {
+        List<Note> notes = new ArrayList<>();
+        String searchQuery = "%" + query.toLowerCase() + "%";
+
+        String NOTES_SELECT_QUERY = String.format(
+                "SELECT * FROM %s WHERE LOWER(%s) LIKE ? OR LOWER(%s) LIKE ? ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { searchQuery, searchQuery });
+            if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+
+                do {
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    String category = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
+
+                    Note note = new Note(id, title, content, category, timestamp, priority);
+                    notes.add(note);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return notes;
     }
 }
