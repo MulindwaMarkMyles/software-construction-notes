@@ -49,4 +49,7 @@
     <string name="format_underline">Underline</string>
     <string name="format_list_bulleted">Bulleted List</string>
     <string name="format_list_numbered">Numbered List</string>
+    
+    <!-- Actions -->
+    <string name="favorite">Favorite</string>
 </resources>
