@@ -2,6 +2,7 @@ package com.example.notes;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -26,6 +27,7 @@ public class NoteDetailActivity extends AppCompatActivity {
     private ChipGroup categoryChips;
     private Chip chipPersonal, chipWork, chipStudy, chipMisc;
     private String currentCategory = "Personal";
+    private Menu menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,11 +177,41 @@ public class NoteDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_note_detail, menu);
+        this.menu = menu;
+        updateFavoriteIcon();
+        return true;
+    }
+
+    private void updateFavoriteIcon() {
+        if (menu != null && note != null) {
+            MenuItem favoriteItem = menu.findItem(R.id.action_favorite);
+            favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_favorite) {
+            toggleFavorite();
+            return true;
+        }
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void toggleFavorite() {
+        if (note != null) {
+            note.setFavorite(!note.isFavorite());
+            updateFavoriteIcon();
+            // Save changes immediately
+            databaseHelper.saveNote(note);
+            Toast.makeText(this, note.isFavorite() ? "Added to favorites" : "Removed from favorites",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -24,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_NOTE_CATEGORY = "category";
     private static final String KEY_NOTE_TIMESTAMP = "timestamp";
     private static final String KEY_NOTE_PRIORITY = "priority";
+    private static final String KEY_NOTE_FAVORITE = "is_favorite";
 
     // Singleton instance
     private static DatabaseHelper instance;
@@ -47,7 +48,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + KEY_NOTE_CONTENT + " TEXT,"
                 + KEY_NOTE_CATEGORY + " TEXT DEFAULT 'Personal',"
                 + KEY_NOTE_TIMESTAMP + " INTEGER,"
-                + KEY_NOTE_PRIORITY + " INTEGER DEFAULT 0"
+                + KEY_NOTE_PRIORITY + " INTEGER DEFAULT 0,"
+                + KEY_NOTE_FAVORITE + " INTEGER DEFAULT 0"
                 + ")";
         db.execSQL(CREATE_NOTES_TABLE);
     }
@@ -308,12 +310,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public List<Note> getFavoriteNotes() {
-        // For now, return high priority notes as favorites
         List<Note> notes = new ArrayList<>();
-
-        String NOTES_SELECT_QUERY = String.format(
-                "SELECT * FROM %s WHERE %s = 2 ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_PRIORITY, KEY_NOTE_TIMESTAMP);
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = 1 ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_FAVORITE, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;

@@ -7,6 +7,7 @@ public class Note {
     private String category;
     private long timestamp;
     private int priority; // 0 = low, 1 = medium, 2 = high
+    private boolean isFavorite;
 
     public Note(int id, String title, String content, String category, long timestamp, int priority) {
         this.id = id;
@@ -15,6 +16,7 @@ public class Note {
         this.category = category;
         this.timestamp = timestamp;
         this.priority = priority;
+        this.isFavorite = false;
     }
 
     public int getId() {
@@ -41,6 +43,10 @@ public class Note {
         return priority;
     }
 
+    public boolean isFavorite() {
+        return isFavorite;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -63,5 +69,9 @@ public class Note {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    public void setFavorite(boolean favorite) {
+        isFavorite = favorite;
     }
 }

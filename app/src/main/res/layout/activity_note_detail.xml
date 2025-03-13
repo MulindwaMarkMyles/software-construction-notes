@@ -16,7 +16,8 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorPrimary"
             app:title="Note Details"
-            app:titleTextColor="@color/text_primary_dark" />
+            app:titleTextColor="@color/text_primary_dark"
+            app:menu="@menu/menu_note_detail" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
