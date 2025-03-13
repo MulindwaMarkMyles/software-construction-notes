@@ -41,6 +41,45 @@
                 android:inputType="textCapSentences" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Categories -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/category_chips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_personal"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/category_personal" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_work"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/category_work" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_study"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/category_study" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_misc"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/category_misc" />
+
+        </com.google.android.material.chip.ChipGroup>
+
         <!-- Note Content -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
