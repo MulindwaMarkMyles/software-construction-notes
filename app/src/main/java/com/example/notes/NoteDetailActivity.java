@@ -152,19 +152,22 @@ public class NoteDetailActivity extends AppCompatActivity {
             return;
         }
 
-        // Update note properties
-        note.setTitle(heading);
-        note.setContent(details);
-        note.setTimestamp(System.currentTimeMillis());
-        note.setCategory(currentCategory);
-        // Keep existing favorite status when saving
-        if (note.getId() == -1) {
-            note.setFavorite(false); // Default for new notes
+        if (note == null) {
+            note = new Note(-1, heading, details, currentCategory, System.currentTimeMillis(), 0);
+        } else {
+            note.setTitle(heading);
+            note.setContent(details);
+            note.setCategory(currentCategory);
+            note.setTimestamp(System.currentTimeMillis());
         }
 
         // Save to database
-        long id = databaseHelper.saveNote(note);
-        if (id > 0) {
+        long result = databaseHelper.saveNote(note);
+        if (result > 0) {
+            // Update the note's ID if it was a new note
+            if (note.getId() <= 0) {
+                note.setId((int) result);
+            }
             Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
             finish();
         } else {
