@@ -80,7 +80,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (note.getId() > 0) {
                 // Update existing note
                 int rows = db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
-                        new String[]{String.valueOf(note.getId())});
+                        new String[] { String.valueOf(note.getId()) });
                 if (rows > 0) {
                     noteId = note.getId();
                 }
