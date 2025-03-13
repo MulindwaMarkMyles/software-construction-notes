@@ -67,28 +67,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         long noteId = -1;
 
-        db.beginTransaction();
-        try {
-            ContentValues values = new ContentValues();
-            values.put(KEY_NOTE_TITLE, note.getTitle());
-            values.put(KEY_NOTE_CONTENT, note.getContent());
-            values.put(KEY_NOTE_CATEGORY, note.getCategory());
-            values.put(KEY_NOTE_TIMESTAMP, note.getTimestamp());
-            values.put(KEY_NOTE_PRIORITY, note.getPriority());
-            values.put(KEY_NOTE_FAVORITE, note.isFavorite() ? 1 : 0);
+        ContentValues values = new ContentValues();
+        values.put(KEY_NOTE_TITLE, note.getTitle());
+        values.put(KEY_NOTE_CONTENT, note.getContent());
+        values.put(KEY_NOTE_CATEGORY, note.getCategory());
+        values.put(KEY_NOTE_TIMESTAMP, note.getTimestamp());
+        values.put(KEY_NOTE_PRIORITY, note.getPriority());
+        values.put(KEY_NOTE_FAVORITE, note.isFavorite() ? 1 : 0);
 
+        try {
+            db.beginTransaction();
             if (note.getId() > 0) {
-                db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
-                        new String[] { String.valueOf(note.getId()) });
-                noteId = note.getId();
+                // Update existing note
+                int rows = db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
+                        new String[]{String.valueOf(note.getId())});
+                if (rows > 0) {
+                    noteId = note.getId();
+                }
             } else {
+                // Insert new note
                 noteId = db.insertOrThrow(TABLE_NOTES, null, values);
             }
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            db.endTransaction();
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
         }
 
         return noteId;
