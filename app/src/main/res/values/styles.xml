@@ -1,0 +1,75 @@
+<resources>
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="android:textColorPrimary">@color/text_primary_light</item>
+        <item name="android:textColorSecondary">@color/text_secondary_light</item>
+        <item name="android:statusBarColor">@color/status_bar_black</item>
+        <item name="chipStyle">@style/Widget.App.Chip</item>
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
+        <item name="android:fontFamily">@font/poppins</item>
+        <item name="fontFamily">@font/poppins</item>
+    </style>
+    
+    <!-- Dark theme -->
+    <style name="AppTheme.Dark" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/gray_700</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorAccent">@color/gray_500</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="android:textColorPrimary">@color/text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/text_secondary_dark</item>
+    </style>
+
+    <!-- Theme used in AndroidManifest -->
+    <style name="Theme.Notes" parent="AppTheme">
+        <!-- Force black status bar -->
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Note card style -->
+    <style name="NoteCardStyle">
+        <item name="android:layout_margin">8dp</item>
+        <item name="cardCornerRadius">4dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="strokeColor">@color/gray_300</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- Text appearance styles -->
+    <style name="TextAppearance.Notes.Title" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary_light</item>
+        <item name="android:fontFamily">@font/poppins</item>
+    </style>
+    
+    <style name="TextAppearance.Notes.Subtitle" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_secondary_light</item>
+        <item name="android:fontFamily">@font/poppins</item>
+    </style>
+    
+    <style name="TextAppearance.Notes.Body" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_primary_light</item>
+        <item name="android:fontFamily">@font/poppins</item>
+    </style>
+    
+    <!-- Custom chip style -->
+    <style name="Widget.App.Chip" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="chipBackgroundColor">@color/gray_200</item>
+        <item name="android:textColor">@color/text_primary_light</item>
+        <item name="rippleColor">@color/gray_400</item>
+    </style>
+    
+    <!-- Custom button style -->
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/colorPrimary</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+</resources>
