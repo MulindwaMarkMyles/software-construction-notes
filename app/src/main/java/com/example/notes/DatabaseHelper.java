@@ -75,9 +75,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(KEY_NOTE_CATEGORY, note.getCategory());
             values.put(KEY_NOTE_TIMESTAMP, note.getTimestamp());
             values.put(KEY_NOTE_PRIORITY, note.getPriority());
-            values.put(KEY_NOTE_FAVORITE, note.isFavorite() ? 1 : 0); // Add this line
+            values.put(KEY_NOTE_FAVORITE, note.isFavorite() ? 1 : 0);
 
-            // Update or insert
             if (note.getId() > 0) {
                 db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
                         new String[] { String.valueOf(note.getId()) });
@@ -86,6 +85,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 noteId = db.insertOrThrow(TABLE_NOTES, null, values);
             }
             db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             db.endTransaction();
         }

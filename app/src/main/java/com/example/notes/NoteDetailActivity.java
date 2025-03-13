@@ -192,9 +192,7 @@ public class NoteDetailActivity extends AppCompatActivity {
         if (menu != null && note != null) {
             MenuItem favoriteItem = menu.findItem(R.id.action_favorite);
             if (favoriteItem != null) {
-                favoriteItem.setIcon(note.isFavorite() ? 
-                    R.drawable.ic_favorite : 
-                    R.drawable.ic_favorite_border);
+                favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
             }
         }
     }
@@ -219,9 +217,9 @@ public class NoteDetailActivity extends AppCompatActivity {
             // Save changes immediately
             long result = databaseHelper.saveNote(note);
             if (result > 0) {
-                Toast.makeText(this, 
-                    note.isFavorite() ? "Added to favorites" : "Removed from favorites",
-                    Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        note.isFavorite() ? "Added to favorites" : "Removed from favorites",
+                        Toast.LENGTH_SHORT).show();
             }
         }
     }
