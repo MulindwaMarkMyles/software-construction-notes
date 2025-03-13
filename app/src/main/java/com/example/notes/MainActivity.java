@@ -124,29 +124,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks
         int id = item.getItemId();
+        NotesListFragment currentFragment = getCurrentFragment();
 
-        if (id == R.id.nav_all_notes) {
-            viewPager.setCurrentItem(0);
-        } else if (id == R.id.nav_favorites) {
-            Toast.makeText(this, "Favorites", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_personal) {
-            Toast.makeText(this, "Personal Notes", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_work) {
-            Toast.makeText(this, "Work Notes", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_study) {
-            Toast.makeText(this, "Study Notes", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_misc) {
-            Toast.makeText(this, "Other Notes", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_trash) {
-            Toast.makeText(this, "Trash", Toast.LENGTH_SHORT).show();
+        if (currentFragment != null) {
+            if (id == R.id.nav_all_notes) {
+                currentFragment.filterByCategory(null); // null means show all
+            } else if (id == R.id.nav_favorites) {
+                currentFragment.filterFavorites();
+            } else if (id == R.id.nav_personal) {
+                currentFragment.filterByCategory("Personal");
+            } else if (id == R.id.nav_work) {
+                currentFragment.filterByCategory("Work");
+            } else if (id == R.id.nav_study) {
+                currentFragment.filterByCategory("Study");
+            } else if (id == R.id.nav_misc) {
+                currentFragment.filterByCategory("Miscellaneous");
+            }
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private NotesListFragment getCurrentFragment() {
+        return (NotesListFragment) ((ViewPagerAdapter) viewPager.getAdapter())
+                .getFragments().get(viewPager.getCurrentItem());
     }
 
     @Override

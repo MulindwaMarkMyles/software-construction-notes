@@ -262,4 +262,135 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return notes;
     }
+
+    public List<Note> searchNotesByCategory(String query, String category) {
+        List<Note> notes = new ArrayList<>();
+        String searchQuery = "%" + query.toLowerCase() + "%";
+
+        String NOTES_SELECT_QUERY = String.format(
+                "SELECT * FROM %s WHERE %s = ? AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(NOTES_SELECT_QUERY,
+                    new String[] { category, searchQuery, searchQuery });
+            if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+
+                do {
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    String categoryResult = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
+
+                    Note note = new Note(id, title, content, categoryResult, timestamp, priority);
+                    notes.add(note);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return notes;
+    }
+
+    public List<Note> getFavoriteNotes() {
+        // For now, return high priority notes as favorites
+        List<Note> notes = new ArrayList<>();
+
+        String NOTES_SELECT_QUERY = String.format(
+                "SELECT * FROM %s WHERE %s = 2 ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_PRIORITY, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(NOTES_SELECT_QUERY, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+
+                do {
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    String category = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
+
+                    Note note = new Note(id, title, content, category, timestamp, priority);
+                    notes.add(note);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return notes;
+    }
+
+    public List<Note> searchFavoriteNotes(String query) {
+        List<Note> notes = new ArrayList<>();
+        String searchQuery = "%" + query.toLowerCase() + "%";
+
+        String NOTES_SELECT_QUERY = String.format(
+                "SELECT * FROM %s WHERE %s = 2 AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_PRIORITY, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(NOTES_SELECT_QUERY,
+                    new String[] { searchQuery, searchQuery });
+            if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+
+                do {
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    String category = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
+
+                    Note note = new Note(id, title, content, category, timestamp, priority);
+                    notes.add(note);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return notes;
+    }
 }

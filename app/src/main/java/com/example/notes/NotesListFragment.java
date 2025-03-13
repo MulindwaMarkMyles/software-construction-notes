@@ -25,6 +25,8 @@ public class NotesListFragment extends Fragment {
     private SearchView searchView;
     private List<Note> notesList = new ArrayList<>();
     private NoteAdapter adapter;
+    private String currentCategory = null;
+    private boolean showFavoritesOnly = false;
 
     @Nullable
     @Override
@@ -123,21 +125,7 @@ public class NotesListFragment extends Fragment {
         if (getContext() == null)
             return;
 
-        List<Note> searchResults;
-        DatabaseHelper databaseHelper = DatabaseHelper.getInstance(getContext());
-
-        if (query.isEmpty()) {
-            // If query is empty, show all notes
-            searchResults = databaseHelper.getAllNotes();
-        } else {
-            // Use the database search method
-            searchResults = databaseHelper.searchNotes(query);
-        }
-
-        if (adapter != null) {
-            adapter.updateList(searchResults);
-            showEmptyStateIfNeeded(searchResults);
-        }
+        filterNotes(query);
     }
 
     private void loadNotes() {
@@ -192,14 +180,33 @@ public class NotesListFragment extends Fragment {
         refreshNotes();
     }
 
+    public void filterByCategory(String category) {
+        currentCategory = category;
+        showFavoritesOnly = false;
+        refreshNotes();
+    }
+
+    public void filterFavorites() {
+        showFavoritesOnly = true;
+        currentCategory = null;
+        refreshNotes();
+    }
+
     private void refreshNotes() {
         try {
             if (getContext() != null) {
                 DatabaseHelper databaseHelper = DatabaseHelper.getInstance(getContext());
                 notesList.clear();
-                notesList.addAll(databaseHelper.getAllNotes());
-                if (notesList.isEmpty()) {
-                    // Add sample notes if database is empty
+
+                if (showFavoritesOnly) {
+                    notesList.addAll(databaseHelper.getFavoriteNotes());
+                } else if (currentCategory != null) {
+                    notesList.addAll(databaseHelper.getNotesByCategory(currentCategory));
+                } else {
+                    notesList.addAll(databaseHelper.getAllNotes());
+                }
+
+                if (notesList.isEmpty() && currentCategory == null && !showFavoritesOnly) {
                     addSampleNotes();
                 }
 
@@ -210,13 +217,41 @@ public class NotesListFragment extends Fragment {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback to sample notes if there's any error
-            notesList.clear();
-            addSampleNotes();
-            if (adapter != null) {
-                adapter.updateList(notesList);
-                showEmptyStateIfNeeded(notesList);
+            // Show empty state
+            showEmptyStateIfNeeded(new ArrayList<>());
+        }
+    }
+
+    private void filterNotes(String query) {
+        if (getContext() == null)
+            return;
+
+        List<Note> searchResults;
+        DatabaseHelper databaseHelper = DatabaseHelper.getInstance(getContext());
+
+        if (query.isEmpty()) {
+            // Show category-filtered or all notes when query is empty
+            if (showFavoritesOnly) {
+                searchResults = databaseHelper.getFavoriteNotes();
+            } else if (currentCategory != null) {
+                searchResults = databaseHelper.getNotesByCategory(currentCategory);
+            } else {
+                searchResults = databaseHelper.getAllNotes();
             }
+        } else {
+            // Search within current category or favorites if filtered
+            if (showFavoritesOnly) {
+                searchResults = databaseHelper.searchFavoriteNotes(query);
+            } else if (currentCategory != null) {
+                searchResults = databaseHelper.searchNotesByCategory(query, currentCategory);
+            } else {
+                searchResults = databaseHelper.searchNotes(query);
+            }
+        }
+
+        if (adapter != null) {
+            adapter.updateList(searchResults);
+            showEmptyStateIfNeeded(searchResults);
         }
     }
 }
