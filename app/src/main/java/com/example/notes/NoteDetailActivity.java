@@ -157,6 +157,10 @@ public class NoteDetailActivity extends AppCompatActivity {
         note.setContent(details);
         note.setTimestamp(System.currentTimeMillis());
         note.setCategory(currentCategory);
+        // Keep existing favorite status when saving
+        if (note.getId() == -1) {
+            note.setFavorite(false); // Default for new notes
+        }
 
         // Save to database
         long id = databaseHelper.saveNote(note);
@@ -187,7 +191,11 @@ public class NoteDetailActivity extends AppCompatActivity {
     private void updateFavoriteIcon() {
         if (menu != null && note != null) {
             MenuItem favoriteItem = menu.findItem(R.id.action_favorite);
-            favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
+            if (favoriteItem != null) {
+                favoriteItem.setIcon(note.isFavorite() ? 
+                    R.drawable.ic_favorite : 
+                    R.drawable.ic_favorite_border);
+            }
         }
     }
 
@@ -209,9 +217,12 @@ public class NoteDetailActivity extends AppCompatActivity {
             note.setFavorite(!note.isFavorite());
             updateFavoriteIcon();
             // Save changes immediately
-            databaseHelper.saveNote(note);
-            Toast.makeText(this, note.isFavorite() ? "Added to favorites" : "Removed from favorites",
+            long result = databaseHelper.saveNote(note);
+            if (result > 0) {
+                Toast.makeText(this, 
+                    note.isFavorite() ? "Added to favorites" : "Removed from favorites",
                     Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
