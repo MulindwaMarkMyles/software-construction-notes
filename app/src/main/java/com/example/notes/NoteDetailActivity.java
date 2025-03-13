@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class NoteDetailActivity extends AppCompatActivity {
@@ -21,6 +23,9 @@ public class NoteDetailActivity extends AppCompatActivity {
     private DatabaseHelper databaseHelper;
     private Note note;
     private Toolbar toolbar;
+    private ChipGroup categoryChips;
+    private Chip chipPersonal, chipWork, chipStudy, chipMisc;
+    private String currentCategory = "Personal";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +45,15 @@ public class NoteDetailActivity extends AppCompatActivity {
 
         // Initialize database helper
         databaseHelper = DatabaseHelper.getInstance(this);
+
+        // Initialize category chips
+        categoryChips = findViewById(R.id.category_chips);
+        chipPersonal = findViewById(R.id.chip_personal);
+        chipWork = findViewById(R.id.chip_work);
+        chipStudy = findViewById(R.id.chip_study);
+        chipMisc = findViewById(R.id.chip_misc);
+
+        setupCategoryChips();
 
         // Get note ID from intent
         Intent intent = getIntent();
@@ -77,6 +91,21 @@ public class NoteDetailActivity extends AppCompatActivity {
         });
     }
 
+    private void setupCategoryChips() {
+        categoryChips.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) {
+                // Ensure at least one category is selected
+                chipPersonal.setChecked(true);
+                currentCategory = "Personal";
+            } else {
+                Chip selectedChip = findViewById(checkedIds.get(0));
+                if (selectedChip != null) {
+                    currentCategory = selectedChip.getText().toString();
+                }
+            }
+        });
+    }
+
     private void createNewNote() {
         // Initialize a new empty note
         note = new Note(-1, "", "", "Personal", System.currentTimeMillis(), 0);
@@ -93,6 +122,22 @@ public class NoteDetailActivity extends AppCompatActivity {
             noteHeadingEditText.setText(note.getTitle());
             noteDetailsEditText.setText(note.getContent());
             setTitle("Edit: " + note.getTitle());
+
+            // Set the correct category chip
+            switch (note.getCategory()) {
+                case "Work":
+                    chipWork.setChecked(true);
+                    break;
+                case "Study":
+                    chipStudy.setChecked(true);
+                    break;
+                case "Miscellaneous":
+                    chipMisc.setChecked(true);
+                    break;
+                default:
+                    chipPersonal.setChecked(true);
+                    break;
+            }
         }
     }
 
@@ -109,6 +154,7 @@ public class NoteDetailActivity extends AppCompatActivity {
         note.setTitle(heading);
         note.setContent(details);
         note.setTimestamp(System.currentTimeMillis());
+        note.setCategory(currentCategory);
 
         // Save to database
         long id = databaseHelper.saveNote(note);
