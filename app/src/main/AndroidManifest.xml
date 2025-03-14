@@ -31,6 +31,19 @@
             android:name=".NoteEditorActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
+
+        <!-- Add these new activities -->
+        <activity
+            android:name=".TrashActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:label="@string/nav_trash" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:label="@string/nav_settings" />
     </application>
 
 </manifest>
