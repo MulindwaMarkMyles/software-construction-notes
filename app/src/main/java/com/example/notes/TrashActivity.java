@@ -46,6 +46,9 @@ public class TrashActivity extends AppCompatActivity {
         // Initialize database helper
         databaseHelper = DatabaseHelper.getInstance(this);
 
+        // Clean up old trash items based on retention settings
+        databaseHelper.cleanupTrash(this);
+
         // Set up RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         loadTrashedNotes();

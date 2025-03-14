@@ -109,12 +109,33 @@ public class NoteDetailActivity extends AppCompatActivity {
     }
 
     private void createNewNote() {
-        // Initialize a new empty note
-        note = new Note(-1, "", "", "Personal", System.currentTimeMillis(), 0);
+        // Initialize a new empty note with default category from settings
+        SettingsManager settingsManager = SettingsManager.getInstance(this);
+        String defaultCategory = settingsManager.getDefaultCategory();
+        note = new Note(-1, "", "", defaultCategory, System.currentTimeMillis(), 0);
+        
+        // Set the appropriate chip as checked
+        switch (defaultCategory) {
+            case "Work":
+                chipWork.setChecked(true);
+                currentCategory = "Work";
+                break;
+            case "Study":
+                chipStudy.setChecked(true);
+                currentCategory = "Study";
+                break;
+            case "Miscellaneous":
+                chipMisc.setChecked(true);
+                currentCategory = "Miscellaneous";
+                break;
+            default:
+                chipPersonal.setChecked(true);
+                currentCategory = "Personal";
+                break;
+        }
+        
         setTitle("Create New Note");
-        // Update button text
         updateButton.setText("Save");
-        // Hide delete button (can't delete a note that doesn't exist yet)
         deleteButton.setVisibility(View.GONE);
     }
 
@@ -187,10 +208,26 @@ public class NoteDetailActivity extends AppCompatActivity {
 
     private void deleteNote() {
         if (note != null) {
-            // Use trash instead of permanent deletion
-            databaseHelper.trashNote(note);
-            Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
-            finish();
+            SettingsManager settingsManager = SettingsManager.getInstance(this);
+            if (settingsManager.shouldConfirmDelete()) {
+                // Show confirmation dialog
+                new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Move to Trash")
+                    .setMessage("Are you sure you want to move this note to trash?")
+                    .setPositiveButton("Move to Trash", (dialog, which) -> {
+                        // User confirmed, move to trash
+                        databaseHelper.trashNote(note);
+                        Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            } else {
+                // No confirmation needed, move to trash directly
+                databaseHelper.trashNote(note);
+                Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
+                finish();
+            }
         }
     }
 

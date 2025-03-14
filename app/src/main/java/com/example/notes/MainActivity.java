@@ -35,6 +35,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Make sure theme is applied before setting content view
+        SettingsManager.getInstance(this).applyTheme();
+        
         setContentView(R.layout.activity_main);
 
         try {

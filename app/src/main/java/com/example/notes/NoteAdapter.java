@@ -51,6 +51,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         Note note = notesList.get(position);
+        SettingsManager settingsManager = SettingsManager.getInstance(context);
 
         // Set text with null checks to prevent crashes
         holder.titleTextView.setText(note.getTitle() != null ? note.getTitle() : "");
@@ -62,7 +63,13 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         }
         holder.contentPreview.setText(contentPreview);
 
-        holder.dateTextView.setText(formatDate(note.getTimestamp()));
+        // Show/hide date based on settings
+        if (settingsManager.shouldShowDate()) {
+            holder.dateTextView.setVisibility(View.VISIBLE);
+            holder.dateTextView.setText(formatDate(note.getTimestamp()));
+        } else {
+            holder.dateTextView.setVisibility(View.GONE);
+        }
 
         // Set category
         holder.categoryChip.setText(note.getCategory());
