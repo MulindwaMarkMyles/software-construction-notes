@@ -24,6 +24,9 @@ public class TrashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Apply theme before setting content view
+        SettingsManager.getInstance(this).applyTheme();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trash);
 
