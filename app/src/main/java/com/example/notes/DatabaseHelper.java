@@ -12,7 +12,7 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
     // Database Info
     private static final String DATABASE_NAME = "notes.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Table Names
     private static final String TABLE_NOTES = "notes";
@@ -83,6 +83,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         new String[] { String.valueOf(note.getId()) });
                 if (rows > 0) {
                     noteId = note.getId();
+                } else {
+                    // If no rows were updated, possibly the note doesn't exist yet
+                    noteId = db.insertOrThrow(TABLE_NOTES, null, values);
                 }
             } else {
                 // Insert new note
@@ -103,25 +106,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Delete a note
     public void deleteNote(Note note) {
         SQLiteDatabase db = getWritableDatabase();
-        db.beginTransaction();
         try {
+            db.beginTransaction();
             db.delete(TABLE_NOTES, KEY_NOTE_ID + " = ?",
                     new String[] { String.valueOf(note.getId()) });
             db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
-            db.endTransaction();
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
         }
     }
 
     // Get all notes
     public List<Note> getAllNotes() {
         List<Note> notes = new ArrayList<>();
-
         String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s ORDER BY %s DESC",
                 TABLE_NOTES, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
+
         try {
             cursor = db.rawQuery(NOTES_SELECT_QUERY, null);
             if (cursor != null && cursor.moveToFirst()) {
@@ -143,7 +150,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                     Note note = new Note(id, title, content, category, timestamp, priority);
-                    note.setFavorite(isFavorite); // Set the favorite status
+                    note.setFavorite(isFavorite);
                     notes.add(note);
                 } while (cursor.moveToNext());
             }
@@ -161,12 +168,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Get a single note by ID
     public Note getNoteById(int noteId) {
         Note note = null;
-
-        SQLiteDatabase db = getReadableDatabase();
         String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ?",
                 TABLE_NOTES, KEY_NOTE_ID);
 
+        SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
+
         try {
             cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { String.valueOf(noteId) });
             if (cursor != null && cursor.moveToFirst()) {
@@ -187,7 +194,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                 note = new Note(id, title, content, category, timestamp, priority);
-                note.setFavorite(isFavorite); // Set the favorite status
+                note.setFavorite(isFavorite);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,24 +210,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Get notes by category
     public List<Note> getNotesByCategory(String category) {
         List<Note> notes = new ArrayList<>();
-
         String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ? ORDER BY %s DESC",
                 TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { category });
+        Cursor cursor = null;
+
         try {
-            if (cursor.moveToFirst()) {
+            cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { category });
+            if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+                int favoriteIndex = cursor.getColumnIndex(KEY_NOTE_FAVORITE);
+
                 do {
-                    int id = cursor.getInt(cursor.getColumnIndex(KEY_NOTE_ID));
-                    String title = cursor.getString(cursor.getColumnIndex(KEY_NOTE_TITLE));
-                    String content = cursor.getString(cursor.getColumnIndex(KEY_NOTE_CONTENT));
-                    long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_NOTE_TIMESTAMP));
-                    int priority = cursor.getInt(cursor.getColumnIndex(KEY_NOTE_PRIORITY));
-                    boolean isFavorite = cursor.getInt(cursor.getColumnIndex(KEY_NOTE_FAVORITE)) == 1;
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
+                    boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                     Note note = new Note(id, title, content, category, timestamp, priority);
-                    note.setFavorite(isFavorite); // Set the favorite status
+                    note.setFavorite(isFavorite);
                     notes.add(note);
                 } while (cursor.moveToNext());
             }
@@ -246,6 +261,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
+
         try {
             cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { searchQuery, searchQuery });
             if (cursor != null && cursor.moveToFirst()) {
@@ -267,7 +283,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                     Note note = new Note(id, title, content, category, timestamp, priority);
-                    note.setFavorite(isFavorite); // Set the favorite status
+                    note.setFavorite(isFavorite);
                     notes.add(note);
                 } while (cursor.moveToNext());
             }
@@ -292,6 +308,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
+
         try {
             cursor = db.rawQuery(NOTES_SELECT_QUERY,
                     new String[] { category, searchQuery, searchQuery });
@@ -314,7 +331,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                     Note note = new Note(id, title, content, categoryResult, timestamp, priority);
-                    note.setFavorite(isFavorite); // Set the favorite status
+                    note.setFavorite(isFavorite);
                     notes.add(note);
                 } while (cursor.moveToNext());
             }
@@ -336,6 +353,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
+
         try {
             cursor = db.rawQuery(NOTES_SELECT_QUERY, null);
             if (cursor != null && cursor.moveToFirst()) {
@@ -357,7 +375,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                     Note note = new Note(id, title, content, category, timestamp, priority);
-                    note.setFavorite(isFavorite); // Set the favorite status
+                    note.setFavorite(isFavorite);
                     notes.add(note);
                 } while (cursor.moveToNext());
             }
@@ -382,6 +400,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
+
         try {
             cursor = db.rawQuery(NOTES_SELECT_QUERY,
                     new String[] { searchQuery, searchQuery });
@@ -404,7 +423,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
 
                     Note note = new Note(id, title, content, category, timestamp, priority);
-                    note.setFavorite(isFavorite); // Set the favorite status
+                    note.setFavorite(isFavorite);
                     notes.add(note);
                 } while (cursor.moveToNext());
             }

@@ -152,26 +152,36 @@ public class NoteDetailActivity extends AppCompatActivity {
             return;
         }
 
-        if (note == null) {
-            note = new Note(-1, heading, details, currentCategory, System.currentTimeMillis(), 0);
-        } else {
-            note.setTitle(heading);
-            note.setContent(details);
-            note.setCategory(currentCategory);
-            note.setTimestamp(System.currentTimeMillis());
-        }
-
-        // Save to database
-        long result = databaseHelper.saveNote(note);
-        if (result > 0) {
-            // Update the note's ID if it was a new note
-            if (note.getId() <= 0) {
-                note.setId((int) result);
+        try {
+            // Create a new note if null or update existing note
+            if (note == null) {
+                note = new Note(-1, heading, details, currentCategory, System.currentTimeMillis(), 0);
+            } else {
+                note.setTitle(heading);
+                note.setContent(details);
+                note.setCategory(currentCategory);
+                note.setTimestamp(System.currentTimeMillis());
+                // Preserve favorite status when updating
             }
-            Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
-            finish();
-        } else {
-            Toast.makeText(this, "Failed to save note", Toast.LENGTH_SHORT).show();
+
+            // Debug output
+            Toast.makeText(this, "Saving note with ID: " + note.getId(), Toast.LENGTH_SHORT).show();
+
+            // Save to database
+            long result = databaseHelper.saveNote(note);
+            if (result > 0) {
+                // Update the note's ID if it was a new note
+                if (note.getId() <= 0) {
+                    note.setId((int) result);
+                }
+                Toast.makeText(this, "Note saved successfully with ID: " + result, Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, "Failed to save note", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -217,12 +227,20 @@ public class NoteDetailActivity extends AppCompatActivity {
         if (note != null) {
             note.setFavorite(!note.isFavorite());
             updateFavoriteIcon();
-            // Save changes immediately
-            long result = databaseHelper.saveNote(note);
-            if (result > 0) {
-                Toast.makeText(this,
-                        note.isFavorite() ? "Added to favorites" : "Removed from favorites",
-                        Toast.LENGTH_SHORT).show();
+
+            try {
+                // Save changes immediately
+                long result = databaseHelper.saveNote(note);
+                if (result > 0) {
+                    Toast.makeText(this,
+                            note.isFavorite() ? "Added to favorites" : "Removed from favorites",
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Failed to update favorite status", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error updating favorite status: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
     }
