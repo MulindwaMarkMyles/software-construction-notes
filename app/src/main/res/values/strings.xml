@@ -52,4 +52,24 @@
     
     <!-- Actions -->
     <string name="favorite">Favorite</string>
+    
+    <!-- Trash -->
+    <string name="no_trashed_notes">No Trashed Notes</string>
+    <string name="trash_empty_message">Notes moved to trash will appear here</string>
+    <string name="restore_note">Restore note</string>
+    <string name="delete_permanently">Delete permanently</string>
+    
+    <!-- Settings -->
+    <string name="pref_appearance">Appearance</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_summary">Choose light or dark theme</string>
+    <string name="pref_show_date">Show Date</string>
+    <string name="pref_show_date_summary">Display date in note cards</string>
+    <string name="pref_notes">Notes</string>
+    <string name="pref_default_category">Default Category</string>
+    <string name="pref_default_category_summary">Default category for new notes</string>
+    <string name="pref_confirm_delete">Confirm Delete</string>
+    <string name="pref_confirm_delete_summary">Show confirmation dialog when deleting notes</string>
+    <string name="pref_trash_retention">Trash Retention</string>
+    <string name="pref_trash_retention_summary">How long to keep notes in trash</string>
 </resources>
