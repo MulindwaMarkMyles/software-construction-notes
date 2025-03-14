@@ -38,7 +38,7 @@ public class TrashActivity extends AppCompatActivity {
         emptyState = findViewById(R.id.empty_state);
         emptyStateTitle = findViewById(R.id.empty_state_title);
         emptyStateSubtitle = findViewById(R.id.empty_state_subtitle);
-        
+
         // Set empty state message
         emptyStateTitle.setText(R.string.no_trashed_notes);
         emptyStateSubtitle.setText(R.string.trash_empty_message);
@@ -65,7 +65,7 @@ public class TrashActivity extends AppCompatActivity {
             }
         });
         recyclerView.setAdapter(adapter);
-        
+
         // Show empty state if needed
         if (trashedNotes.isEmpty()) {
             recyclerView.setVisibility(View.GONE);

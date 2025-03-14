@@ -12,7 +12,7 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
     // Database Info
     private static final String DATABASE_NAME = "notes.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Table Names
     private static final String TABLE_NOTES = "notes";
@@ -25,6 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_NOTE_TIMESTAMP = "timestamp";
     private static final String KEY_NOTE_PRIORITY = "priority";
     private static final String KEY_NOTE_FAVORITE = "is_favorite";
+    private static final String KEY_NOTE_DELETED = "is_deleted";
 
     // Singleton instance
     private static DatabaseHelper instance;
@@ -49,16 +50,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + KEY_NOTE_CATEGORY + " TEXT DEFAULT 'Personal',"
                 + KEY_NOTE_TIMESTAMP + " INTEGER,"
                 + KEY_NOTE_PRIORITY + " INTEGER DEFAULT 0,"
-                + KEY_NOTE_FAVORITE + " INTEGER DEFAULT 0"
+                + KEY_NOTE_FAVORITE + " INTEGER DEFAULT 0,"
+                + KEY_NOTE_DELETED + " INTEGER DEFAULT 0"
                 + ")";
         db.execSQL(CREATE_NOTES_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion != newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTES);
-            onCreate(db);
+        if (oldVersion < 3) {
+            // Add is_deleted column if upgrading from version 1 or 2
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_NOTES + " ADD COLUMN " + KEY_NOTE_DELETED + " INTEGER DEFAULT 0");
+            } catch (Exception e) {
+                // Column might already exist, recreate the table in case of issues
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTES);
+                onCreate(db);
+            }
         }
     }
 
@@ -120,11 +128,96 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    // Soft delete - move to trash
+    public void trashNote(Note note) {
+        SQLiteDatabase db = getWritableDatabase();
+        try {
+            db.beginTransaction();
+            ContentValues values = new ContentValues();
+            values.put(KEY_NOTE_DELETED, 1);
+
+            db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
+                    new String[] { String.valueOf(note.getId()) });
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
+        }
+    }
+
+    // Restore from trash
+    public void restoreNote(Note note) {
+        SQLiteDatabase db = getWritableDatabase();
+        try {
+            db.beginTransaction();
+            ContentValues values = new ContentValues();
+            values.put(KEY_NOTE_DELETED, 0);
+
+            db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
+                    new String[] { String.valueOf(note.getId()) });
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
+        }
+    }
+
+    // Get trashed notes
+    public List<Note> getTrashedNotes() {
+        List<Note> notes = new ArrayList<>();
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = 1 ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_DELETED, KEY_NOTE_TIMESTAMP);
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery(NOTES_SELECT_QUERY, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
+                int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
+                int contentIndex = cursor.getColumnIndex(KEY_NOTE_CONTENT);
+                int categoryIndex = cursor.getColumnIndex(KEY_NOTE_CATEGORY);
+                int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
+                int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
+                int favoriteIndex = cursor.getColumnIndex(KEY_NOTE_FAVORITE);
+
+                do {
+                    int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
+                    String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
+                    String content = contentIndex != -1 ? cursor.getString(contentIndex) : "";
+                    String category = categoryIndex != -1 ? cursor.getString(categoryIndex) : "Personal";
+                    long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
+                    int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
+                    boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
+
+                    Note note = new Note(id, title, content, category, timestamp, priority);
+                    note.setFavorite(isFavorite);
+                    notes.add(note);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return notes;
+    }
+
     // Get all notes
     public List<Note> getAllNotes() {
         List<Note> notes = new ArrayList<>();
-        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_TIMESTAMP);
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_DELETED, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
@@ -168,8 +261,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Get a single note by ID
     public Note getNoteById(int noteId) {
         Note note = null;
-        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ?",
-                TABLE_NOTES, KEY_NOTE_ID);
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ? AND %s = 0",
+                TABLE_NOTES, KEY_NOTE_ID, KEY_NOTE_DELETED);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
@@ -210,8 +303,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Get notes by category
     public List<Note> getNotesByCategory(String category) {
         List<Note> notes = new ArrayList<>();
-        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ? ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_TIMESTAMP);
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ? AND %s = 0 ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_DELETED, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
@@ -256,8 +349,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String searchQuery = "%" + query.toLowerCase() + "%";
 
         String NOTES_SELECT_QUERY = String.format(
-                "SELECT * FROM %s WHERE LOWER(%s) LIKE ? OR LOWER(%s) LIKE ? ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
+                "SELECT * FROM %s WHERE %s = 0 AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_DELETED, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
@@ -303,8 +396,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String searchQuery = "%" + query.toLowerCase() + "%";
 
         String NOTES_SELECT_QUERY = String.format(
-                "SELECT * FROM %s WHERE %s = ? AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
+                "SELECT * FROM %s WHERE %s = ? AND %s = 0 AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_CATEGORY, KEY_NOTE_DELETED, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
@@ -348,8 +441,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public List<Note> getFavoriteNotes() {
         List<Note> notes = new ArrayList<>();
-        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = 1 ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_FAVORITE, KEY_NOTE_TIMESTAMP);
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = 1 AND %s = 0 ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_FAVORITE, KEY_NOTE_DELETED, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
@@ -395,8 +488,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String searchQuery = "%" + query.toLowerCase() + "%";
 
         String NOTES_SELECT_QUERY = String.format(
-                "SELECT * FROM %s WHERE %s = 1 AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
-                TABLE_NOTES, KEY_NOTE_FAVORITE, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
+                "SELECT * FROM %s WHERE %s = 1 AND %s = 0 AND (LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?) ORDER BY %s DESC",
+                TABLE_NOTES, KEY_NOTE_FAVORITE, KEY_NOTE_DELETED, KEY_NOTE_TITLE, KEY_NOTE_CONTENT, KEY_NOTE_TIMESTAMP);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;

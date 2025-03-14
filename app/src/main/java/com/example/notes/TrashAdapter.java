@@ -23,6 +23,7 @@ public class TrashAdapter extends RecyclerView.Adapter<TrashAdapter.TrashViewHol
 
     public interface TrashActionListener {
         void onRestore(Note note);
+
         void onDeletePermanently(Note note);
     }
 
@@ -44,23 +45,23 @@ public class TrashAdapter extends RecyclerView.Adapter<TrashAdapter.TrashViewHol
         Note note = trashList.get(position);
 
         holder.titleTextView.setText(note.getTitle());
-        
+
         String contentPreview = note.getContent();
         if (contentPreview.length() > 80) {
             contentPreview = contentPreview.substring(0, 77) + "...";
         }
         holder.contentPreview.setText(contentPreview);
-        
+
         holder.dateTextView.setText(formatDate(note.getTimestamp()));
         holder.categoryTextView.setText(note.getCategory());
-        
+
         // Set up click listeners
         holder.restoreButton.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onRestore(note);
             }
         });
-        
+
         holder.deleteButton.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onDeletePermanently(note);
