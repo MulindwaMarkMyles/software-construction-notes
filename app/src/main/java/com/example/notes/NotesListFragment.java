@@ -281,4 +281,14 @@ public class NotesListFragment extends Fragment {
             showEmptyStateIfNeeded(searchResults);
         }
     }
+
+    /**
+     * Closes the search view if it's open
+     */
+    public void closeSearch() {
+        if (searchView != null && !searchView.isIconified()) {
+            searchView.setQuery("", false);
+            searchView.setIconified(true);
+        }
+    }
 }
