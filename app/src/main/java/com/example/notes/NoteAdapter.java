@@ -1,6 +1,7 @@
 package com.example.notes;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
@@ -19,9 +21,10 @@ import java.util.Locale;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
-    private Context context;
+    private final Context context;
     private List<Note> notesList;
     private OnItemClickListener listener;
+    private boolean isDarkTheme = false;
 
     public interface OnItemClickListener {
         void onItemClick(Note note);
@@ -107,11 +110,48 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                 holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_low));
                 break;
         }
+
+        // Apply theme-specific styling
+        applyThemeToViewHolder(holder);
+    }
+
+    private void applyThemeToViewHolder(NoteViewHolder holder) {
+        // Get system colors based on current theme
+        TypedArray ta = context.obtainStyledAttributes(new int[] {
+                android.R.attr.textColorPrimary,
+                android.R.attr.textColorSecondary,
+                android.R.attr.colorBackground
+        });
+
+        int textColorPrimary = ta.getColor(0, 0);
+        int textColorSecondary = ta.getColor(1, 0);
+        int backgroundColor = ta.getColor(2, 0);
+        ta.recycle();
+
+        // Apply system colors based on theme
+        holder.titleTextView.setTextColor(textColorPrimary);
+        holder.contentPreview.setTextColor(textColorSecondary);
+        holder.dateTextView.setTextColor(textColorSecondary);
+        holder.itemView.setBackgroundColor(backgroundColor);
+
+        // Category chip text color - use primary color from resources if available
+        try {
+            int primaryColor = ContextCompat.getColor(context, R.color.colorPrimary);
+            holder.categoryChip.setTextColor(primaryColor);
+        } catch (Exception e) {
+            // If colorPrimary is not defined, use textColorPrimary as fallback
+            holder.categoryChip.setTextColor(textColorPrimary);
+        }
     }
 
     @Override
     public int getItemCount() {
         return notesList.size();
+    }
+
+    public void updateTheme(boolean isDarkTheme) {
+        this.isDarkTheme = isDarkTheme;
+        notifyDataSetChanged();
     }
 
     private String formatDate(long timestamp) {

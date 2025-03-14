@@ -3,11 +3,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_all_notes"
-            android:icon="@drawable/ic_notes"
+            android:icon="@drawable/edit"
             android:title="@string/nav_all_notes" />
         <item
             android:id="@+id/nav_favorites"
-            android:icon="@drawable/ic_favorite"
+            android:icon="@drawable/heart"
             android:title="@string/nav_favorites" />
     </group>
 
@@ -15,19 +15,19 @@
         <menu>
             <item
                 android:id="@+id/nav_personal"
-                android:icon="@drawable/ic_category"
+                android:icon="@drawable/user"
                 android:title="@string/category_personal" />
             <item
                 android:id="@+id/nav_work"
-                android:icon="@drawable/ic_category"
+                android:icon="@drawable/briefcase"
                 android:title="@string/category_work" />
             <item
                 android:id="@+id/nav_study"
-                android:icon="@drawable/ic_category"
+                android:icon="@drawable/graduation_hat"
                 android:title="@string/category_study" />
             <item
                 android:id="@+id/nav_misc"
-                android:icon="@drawable/ic_category"
+                android:icon="@drawable/button"
                 android:title="@string/category_misc" />
         </menu>
     </item>
@@ -36,11 +36,11 @@
         <menu>
             <item
                 android:id="@+id/nav_settings"
-                android:icon="@drawable/ic_settings"
+                android:icon="@drawable/settings"
                 android:title="@string/nav_settings" />
             <item
                 android:id="@+id/nav_trash"
-                android:icon="@drawable/ic_trash"
+                android:icon="@drawable/delete"
                 android:title="@string/nav_trash" />
         </menu>
     </item>

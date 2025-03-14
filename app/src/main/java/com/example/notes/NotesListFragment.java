@@ -1,6 +1,7 @@
 package com.example.notes;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ public class NotesListFragment extends Fragment {
     private NoteAdapter adapter;
     private String currentCategory = null;
     private boolean showFavoritesOnly = false;
+    private boolean isDarkTheme = false;
 
     @Nullable
     @Override
@@ -43,6 +45,9 @@ public class NotesListFragment extends Fragment {
         searchView = view.findViewById(R.id.search_view);
         emptyStateTitle = view.findViewById(R.id.empty_state_title);
         emptyStateSubtitle = view.findViewById(R.id.empty_state_subtitle);
+
+        // Check current theme
+        updateThemeStatus();
 
         // Set up RecyclerView
         setupRecyclerView();
@@ -74,6 +79,9 @@ public class NotesListFragment extends Fragment {
         notesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         notesRecyclerView.setAdapter(adapter);
 
+        // Apply theme after creating adapter
+        updateAdapterTheme();
+
         // Add click listener to open note detail
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
@@ -84,6 +92,12 @@ public class NotesListFragment extends Fragment {
                 startActivity(intent);
             }
         });
+    }
+
+    private void updateAdapterTheme() {
+        if (adapter != null && getContext() != null) {
+            adapter.updateTheme(isDarkTheme);
+        }
     }
 
     private void setupSearch() {
@@ -133,6 +147,15 @@ public class NotesListFragment extends Fragment {
         filterNotes(query);
     }
 
+    private void updateThemeStatus() {
+        if (getContext() != null) {
+            // Use the same theme detection as in SettingsManager
+            int nightModeFlags = getContext().getResources().getConfiguration().uiMode &
+                    Configuration.UI_MODE_NIGHT_MASK;
+            isDarkTheme = nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
+        }
+    }
+
     private void loadNotes() {
         // Clear existing list to avoid duplicates
         notesList.clear();
@@ -154,6 +177,8 @@ public class NotesListFragment extends Fragment {
         }
 
         if (adapter != null) {
+            updateThemeStatus();
+            updateAdapterTheme();
             adapter.updateList(notesList);
             showEmptyStateIfNeeded(notesList);
         }
@@ -182,6 +207,12 @@ public class NotesListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // Check if theme has changed
+        boolean wasDarkTheme = isDarkTheme;
+        updateThemeStatus();
+        if (wasDarkTheme != isDarkTheme) {
+            updateAdapterTheme();
+        }
         // Refresh notes list when returning to fragment
         refreshNotes();
     }
@@ -222,6 +253,9 @@ public class NotesListFragment extends Fragment {
     private void refreshNotes() {
         try {
             if (getContext() != null) {
+                updateThemeStatus();
+                updateAdapterTheme();
+
                 DatabaseHelper databaseHelper = DatabaseHelper.getInstance(getContext());
                 notesList.clear();
 
