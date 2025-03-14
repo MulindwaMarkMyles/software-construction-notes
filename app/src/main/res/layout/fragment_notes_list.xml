@@ -68,6 +68,7 @@
             android:contentDescription="@string/no_notes_found" />
             
         <TextView
+            android:id="@+id/empty_state_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -75,6 +76,7 @@
             android:textAppearance="@style/TextAppearance.Notes.Title" />
             
         <TextView
+            android:id="@+id/empty_state_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

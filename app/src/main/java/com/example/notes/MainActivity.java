@@ -130,26 +130,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (currentFragment != null) {
             if (id == R.id.nav_all_notes) {
                 currentFragment.filterByCategory(null); // null means show all
+                setTitle(R.string.app_name); // Reset title to app name
             } else if (id == R.id.nav_favorites) {
                 currentFragment.filterFavorites();
+                setTitle(R.string.nav_favorites);
             } else if (id == R.id.nav_personal) {
                 currentFragment.filterByCategory("Personal");
+                setTitle(R.string.category_personal);
             } else if (id == R.id.nav_work) {
                 currentFragment.filterByCategory("Work");
+                setTitle(R.string.category_work);
             } else if (id == R.id.nav_study) {
                 currentFragment.filterByCategory("Study");
+                setTitle(R.string.category_study);
             } else if (id == R.id.nav_misc) {
                 currentFragment.filterByCategory("Miscellaneous");
+                setTitle(R.string.category_misc);
+            } else if (id == R.id.nav_settings) {
+                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+            } else if (id == R.id.nav_trash) {
+                Toast.makeText(this, "Trash", Toast.LENGTH_SHORT).show();
             }
         }
-
+        
+        // Keep selected item highlighted
+        navigationView.setCheckedItem(id);
+        
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
     private NotesListFragment getCurrentFragment() {
-        return (NotesListFragment) ((ViewPagerAdapter) viewPager.getAdapter())
-                .getFragments().get(viewPager.getCurrentItem());
+        if (viewPager == null || viewPager.getAdapter() == null) {
+            return null;
+        }
+        
+        try {
+            return (NotesListFragment) ((ViewPagerAdapter) viewPager.getAdapter())
+                    .getFragments().get(viewPager.getCurrentItem());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
