@@ -152,10 +152,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(this, "Trash", Toast.LENGTH_SHORT).show();
             }
         }
-        
+
         // Keep selected item highlighted
         navigationView.setCheckedItem(id);
-        
+
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (viewPager == null || viewPager.getAdapter() == null) {
             return null;
         }
-        
+
         try {
             return (NotesListFragment) ((ViewPagerAdapter) viewPager.getAdapter())
                     .getFragments().get(viewPager.getCurrentItem());

@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +24,8 @@ public class NotesListFragment extends Fragment {
     private RecyclerView notesRecyclerView;
     private LinearLayout emptyState;
     private SearchView searchView;
+    private TextView emptyStateTitle;
+    private TextView emptyStateSubtitle;
     private List<Note> notesList = new ArrayList<>();
     private NoteAdapter adapter;
     private String currentCategory = null;
@@ -38,6 +41,8 @@ public class NotesListFragment extends Fragment {
         notesRecyclerView = view.findViewById(R.id.notes_recycler_view);
         emptyState = view.findViewById(R.id.empty_state);
         searchView = view.findViewById(R.id.search_view);
+        emptyStateTitle = view.findViewById(R.id.empty_state_title);
+        emptyStateSubtitle = view.findViewById(R.id.empty_state_subtitle);
 
         // Set up RecyclerView
         setupRecyclerView();
@@ -167,6 +172,7 @@ public class NotesListFragment extends Fragment {
         if (notes.isEmpty()) {
             notesRecyclerView.setVisibility(View.GONE);
             emptyState.setVisibility(View.VISIBLE);
+            updateEmptyStateMessage();
         } else {
             notesRecyclerView.setVisibility(View.VISIBLE);
             emptyState.setVisibility(View.GONE);
@@ -183,13 +189,34 @@ public class NotesListFragment extends Fragment {
     public void filterByCategory(String category) {
         currentCategory = category;
         showFavoritesOnly = false;
+        searchView.setQuery("", false); // Clear search when changing filters
         refreshNotes();
+        updateEmptyStateMessage();
     }
 
     public void filterFavorites() {
         showFavoritesOnly = true;
         currentCategory = null;
+        searchView.setQuery("", false); // Clear search when changing filters
         refreshNotes();
+        updateEmptyStateMessage();
+    }
+
+    private void updateEmptyStateMessage() {
+        if (emptyStateTitle == null || emptyStateSubtitle == null) {
+            return;
+        }
+
+        if (showFavoritesOnly) {
+            emptyStateTitle.setText("No Favorites");
+            emptyStateSubtitle.setText("Notes marked as favorites will appear here");
+        } else if (currentCategory != null) {
+            emptyStateTitle.setText("No " + currentCategory + " Notes");
+            emptyStateSubtitle.setText("Create a note in this category to see it here");
+        } else {
+            emptyStateTitle.setText(R.string.no_notes_found);
+            emptyStateSubtitle.setText(R.string.create_first_note);
+        }
     }
 
     private void refreshNotes() {
