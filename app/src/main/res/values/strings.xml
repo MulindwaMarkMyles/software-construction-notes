@@ -59,6 +59,10 @@
     <string name="restore_note">Restore note</string>
     <string name="delete_permanently">Delete permanently</string>
     
+    <!-- Trash Actions -->
+    <string name="note_restored">Note restored</string>
+    <string name="note_deleted_permanently">Note permanently deleted</string>
+    
     <!-- Settings -->
     <string name="pref_appearance">Appearance</string>
     <string name="pref_theme">Theme</string>
