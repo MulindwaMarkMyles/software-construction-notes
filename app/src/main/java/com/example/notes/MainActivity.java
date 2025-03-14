@@ -125,39 +125,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        NotesListFragment currentFragment = getCurrentFragment();
 
+        // Close any open search
+        NotesListFragment currentFragment = getCurrentFragment();
         if (currentFragment != null) {
-            if (id == R.id.nav_all_notes) {
-                currentFragment.filterByCategory(null); // null means show all
-                setTitle(R.string.app_name); // Reset title to app name
-            } else if (id == R.id.nav_favorites) {
-                currentFragment.filterFavorites();
-                setTitle(R.string.nav_favorites);
-            } else if (id == R.id.nav_personal) {
-                currentFragment.filterByCategory("Personal");
-                setTitle(R.string.category_personal);
-            } else if (id == R.id.nav_work) {
-                currentFragment.filterByCategory("Work");
-                setTitle(R.string.category_work);
-            } else if (id == R.id.nav_study) {
-                currentFragment.filterByCategory("Study");
-                setTitle(R.string.category_study);
-            } else if (id == R.id.nav_misc) {
-                currentFragment.filterByCategory("Miscellaneous");
-                setTitle(R.string.category_misc);
-            } else if (id == R.id.nav_settings) {
-                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_trash) {
-                Toast.makeText(this, "Trash", Toast.LENGTH_SHORT).show();
-            }
+            currentFragment.closeSearch();
         }
 
-        // Keep selected item highlighted
-        navigationView.setCheckedItem(id);
+        if (id == R.id.nav_all_notes) {
+            currentFragment = getCurrentFragment();
 
-        drawerLayout.closeDrawer(GravityCompat.START);
-        return true;
+            if (currentFragment != null) {
+                if (id == R.id.nav_all_notes) {
+                    currentFragment.filterByCategory(null); // null means show all
+                    setTitle(R.string.app_name); // Reset title to app name
+                } else if (id == R.id.nav_favorites) {
+                    currentFragment.filterFavorites();
+                    setTitle(R.string.nav_favorites);
+                } else if (id == R.id.nav_personal) {
+                    currentFragment.filterByCategory("Personal");
+                    setTitle(R.string.category_personal);
+                } else if (id == R.id.nav_work) {
+                    currentFragment.filterByCategory("Work");
+                    setTitle(R.string.category_work);
+                } else if (id == R.id.nav_study) {
+                    currentFragment.filterByCategory("Study");
+                    setTitle(R.string.category_study);
+                } else if (id == R.id.nav_misc) {
+                    currentFragment.filterByCategory("Miscellaneous");
+                    setTitle(R.string.category_misc);
+                } else if (id == R.id.nav_settings) {
+                    Intent intent = new Intent(this, SettingsActivity.class);
+                    startActivity(intent);
+                } else if (id == R.id.nav_trash) {
+                    Intent intent = new Intent(this, TrashActivity.class);
+                    startActivity(intent);
+                }
+            }
+
+            // Keep selected item highlighted
+            navigationView.setCheckedItem(id);
+
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        }
     }
 
     private NotesListFragment getCurrentFragment() {

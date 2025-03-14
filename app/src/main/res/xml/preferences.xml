@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/pref_appearance">
+        <ListPreference
+            app:key="theme"
+            app:title="@string/pref_theme"
+            app:summary="@string/pref_theme_summary"
+            app:entries="@array/theme_entries"
+            app:entryValues="@array/theme_values"
+            app:defaultValue="light" />
+
+        <SwitchPreferenceCompat
+            app:key="show_date"
+            app:title="@string/pref_show_date"
+            app:summary="@string/pref_show_date_summary"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/pref_notes">
+        <ListPreference
+            app:key="default_category"
+            app:title="@string/pref_default_category"
+            app:summary="@string/pref_default_category_summary"
+            app:entries="@array/category_entries"
+            app:entryValues="@array/category_values"
+            app:defaultValue="personal" />
+
+        <SwitchPreferenceCompat
+            app:key="confirm_delete"
+            app:title="@string/pref_confirm_delete"
+            app:summary="@string/pref_confirm_delete_summary"
+            app:defaultValue="true" />
+            
+        <ListPreference
+            app:key="trash_retention"
+            app:title="@string/pref_trash_retention"
+            app:summary="@string/pref_trash_retention_summary"
+            app:entries="@array/trash_retention_entries"
+            app:entryValues="@array/trash_retention_values"
+            app:defaultValue="30" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

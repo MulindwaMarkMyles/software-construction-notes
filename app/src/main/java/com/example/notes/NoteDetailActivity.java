@@ -187,8 +187,9 @@ public class NoteDetailActivity extends AppCompatActivity {
 
     private void deleteNote() {
         if (note != null) {
-            databaseHelper.deleteNote(note);
-            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
+            // Use trash instead of permanent deletion
+            databaseHelper.trashNote(note);
+            Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
             finish();
         }
     }
