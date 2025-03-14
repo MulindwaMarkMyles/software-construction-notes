@@ -538,13 +538,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SettingsManager settingsManager = SettingsManager.getInstance(context);
         int retentionDays = settingsManager.getTrashRetentionDays();
         long cutoffTime = System.currentTimeMillis() - (retentionDays * 24 * 60 * 60 * 1000L);
-        
+
         SQLiteDatabase db = getWritableDatabase();
         try {
             db.beginTransaction();
             // Delete notes that have been in trash for longer than the retention period
-            db.delete(TABLE_NOTES, KEY_NOTE_DELETED + " = 1 AND " + KEY_NOTE_TIMESTAMP + " < ?", 
-                new String[]{String.valueOf(cutoffTime)});
+            db.delete(TABLE_NOTES, KEY_NOTE_DELETED + " = 1 AND " + KEY_NOTE_TIMESTAMP + " < ?",
+                    new String[] { String.valueOf(cutoffTime) });
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();

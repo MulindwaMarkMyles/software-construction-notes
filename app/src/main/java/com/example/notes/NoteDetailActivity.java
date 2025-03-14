@@ -113,7 +113,7 @@ public class NoteDetailActivity extends AppCompatActivity {
         SettingsManager settingsManager = SettingsManager.getInstance(this);
         String defaultCategory = settingsManager.getDefaultCategory();
         note = new Note(-1, "", "", defaultCategory, System.currentTimeMillis(), 0);
-        
+
         // Set the appropriate chip as checked
         switch (defaultCategory) {
             case "Work":
@@ -133,7 +133,7 @@ public class NoteDetailActivity extends AppCompatActivity {
                 currentCategory = "Personal";
                 break;
         }
-        
+
         setTitle("Create New Note");
         updateButton.setText("Save");
         deleteButton.setVisibility(View.GONE);
@@ -212,16 +212,16 @@ public class NoteDetailActivity extends AppCompatActivity {
             if (settingsManager.shouldConfirmDelete()) {
                 // Show confirmation dialog
                 new androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("Move to Trash")
-                    .setMessage("Are you sure you want to move this note to trash?")
-                    .setPositiveButton("Move to Trash", (dialog, which) -> {
-                        // User confirmed, move to trash
-                        databaseHelper.trashNote(note);
-                        Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
-                        finish();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+                        .setTitle("Move to Trash")
+                        .setMessage("Are you sure you want to move this note to trash?")
+                        .setPositiveButton("Move to Trash", (dialog, which) -> {
+                            // User confirmed, move to trash
+                            databaseHelper.trashNote(note);
+                            Toast.makeText(this, "Note moved to trash", Toast.LENGTH_SHORT).show();
+                            finish();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
             } else {
                 // No confirmation needed, move to trash directly
                 databaseHelper.trashNote(note);
