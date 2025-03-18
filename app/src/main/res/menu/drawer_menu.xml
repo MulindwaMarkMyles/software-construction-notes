@@ -47,7 +47,7 @@
      <item android:title="@string/nav_extra">
         <item
             android:id="@+id/nav_sign_out"
-            android:icon="@drawable/ic_logout"
+            android:icon="@drawable/logout"
             android:title="@string/nav_sign_out" />
-    </group>
+    </item>
 </menu>
