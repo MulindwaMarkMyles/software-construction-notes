@@ -27,7 +27,7 @@ public class OnboardingActivity extends AppCompatActivity {
         nextButton = findViewById(R.id.nextButton);
         TabLayout tabLayout = findViewById(R.id.tabLayout);
 
-        viewPager.setAdapter(new OnboardingAdapter(this));  // Pass 'this' as the FragmentActivity
+        viewPager.setAdapter(new OnboardingAdapter(this)); // Pass 'this' as the FragmentActivity
 
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> {
