@@ -21,7 +21,7 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
-        
+
         // If already signed in, go to MainActivity and mark onboarding as completed
         if (mAuth.getCurrentUser() != null) {
             SettingsManager.getInstance(this).setOnboardingCompleted(true);
