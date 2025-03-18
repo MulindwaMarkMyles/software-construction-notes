@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -33,10 +35,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FloatingActionButton fabAddNote;
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+
+        // Check if user is signed in
+        if (mAuth.getCurrentUser() == null) {
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        }
 
         // Initialize Firebase
         FirebaseApp.initializeApp(this);
@@ -165,6 +178,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_trash) {
             Intent intent = new Intent(this, TrashActivity.class);
             startActivity(intent);
+        } else if (id == R.id.nav_sign_out) {
+            mAuth.signOut();
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return true;
         }
 
         // Keep selected item highlighted
