@@ -179,8 +179,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(this, TrashActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_sign_out) {
+            // Simply sign out without clearing preferences
             mAuth.signOut();
-            startActivity(new Intent(this, SignInActivity.class));
+            startActivity(new Intent(this, SignInActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
             finish();
             return true;
         }

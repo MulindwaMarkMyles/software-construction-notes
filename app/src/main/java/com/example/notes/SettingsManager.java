@@ -86,4 +86,14 @@ public class SettingsManager {
     public void unregisterPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
         preferences.unregisterOnSharedPreferenceChangeListener(listener);
     }
+
+    public void clearUserPreferences() {
+        SharedPreferences.Editor editor = preferences.edit();
+        // Clear all preferences except theme setting
+        String currentTheme = preferences.getString("theme_preference", "system");
+        editor.clear();
+        // Restore theme setting
+        editor.putString("theme_preference", currentTheme);
+        editor.apply();
+    }
 }

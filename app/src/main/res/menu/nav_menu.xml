@@ -34,14 +34,14 @@
             android:title="@string/nav_trash" />
     </group>
 
-    <group android:id="@+id/nav_group_logout">
-        <!-- <item
+    <group android:id="@+id/nav_group_settings">
+        <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/settings"
-            android:title="@string/nav_settings" /> -->
+            android:title="@string/nav_settings" />
         <item
             android:id="@+id/nav_sign_out"
-            android:icon="@drawable/logout"
+            android:icon="@drawable/ic_logout"
             android:title="@string/nav_sign_out" />
     </group>
 </menu>
