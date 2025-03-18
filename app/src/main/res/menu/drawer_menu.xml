@@ -31,8 +31,7 @@
                 android:title="@string/category_misc" />
         </menu>
     </item>
-
-    <item android:title="">
+    <item android:title="Miscellaneous">
         <menu>
             <item
                 android:id="@+id/nav_settings"
