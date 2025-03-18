@@ -15,7 +15,7 @@ timothy = {
 }
 
 maurice = {
-    "email": "nickbaraka96@gmail.com",
+    "email": "incognitodave64@gmail.com",
     "name" : "BarakaM10"
 }
 

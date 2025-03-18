@@ -31,9 +31,9 @@
             app:tabPadding="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
-            app:tabPaddingStart="8dp"
-            app:tabPaddingEnd="8dp"
-            app:tabMinWidth="6dp" />
+            app:tabPaddingStart="12dp"
+            app:tabPaddingEnd="12dp"
+            app:tabMinWidth="8dp" />
 
         <RelativeLayout
             android:layout_width="match_parent"
