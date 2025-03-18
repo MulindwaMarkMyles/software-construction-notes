@@ -3,23 +3,23 @@
     <group android:id="@+id/nav_group_main">
         <item
             android:id="@+id/nav_all_notes"
-            android:icon="@drawable/ic_notes"
+            android:icon="@drawable/edit"
             android:title="@string/nav_all_notes" />
         <item
             android:id="@+id/nav_favorites"
-            android:icon="@drawable/ic_favorite"
+            android:icon="@drawable/heart"
             android:title="@string/nav_favorites" />
         <item
             android:id="@+id/nav_personal"
-            android:icon="@drawable/ic_personal"
+            android:icon="@drawable/user"
             android:title="@string/nav_personal" />
         <item
             android:id="@+id/nav_work"
-            android:icon="@drawable/ic_work"
+            android:icon="@drawable/briefcase"
             android:title="@string/nav_work" />
         <item
             android:id="@+id/nav_study"
-            android:icon="@drawable/ic_study"
+            android:icon="@drawable/graduation_hat"
             android:title="@string/nav_study" />
         <item
             android:id="@+id/nav_misc"
