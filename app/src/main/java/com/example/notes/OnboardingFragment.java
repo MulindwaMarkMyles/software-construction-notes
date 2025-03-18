@@ -25,7 +25,7 @@ public class OnboardingFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                            @Nullable Bundle savedInstanceState) {
+            @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_onboarding, container, false);
     }
 
@@ -34,7 +34,7 @@ public class OnboardingFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         int position = getArguments() != null ? getArguments().getInt(ARG_POSITION) : 0;
-        
+
         ImageView imageView = view.findViewById(R.id.onboardingImage);
         TextView titleText = view.findViewById(R.id.titleText);
         TextView descText = view.findViewById(R.id.descriptionText);
