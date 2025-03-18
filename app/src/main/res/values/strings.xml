@@ -91,7 +91,7 @@
     <string name="confirm_password">Confirm Password</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_up">Sign Up</string>
-    <string name="no_account">Don't have an account?</string>
+    <string name="no_account">Don\'t have an account?</string>
     <string name="have_account">Already have an account?</string>
     <string name="signing_in">Signing in…</string>
     <string name="creating_account">Creating account…</string>
