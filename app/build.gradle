@@ -38,7 +38,7 @@ android {
     defaultConfig {
         applicationId "com.example.notes"
         minSdkVersion 21 // Lowered for better compatibility
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
         
