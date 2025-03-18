@@ -28,7 +28,12 @@
             app:tabGravity="center"
             app:tabIndicator="@null"
             app:tabIndicatorHeight="0dp"
-            app:tabPadding="8dp" />
+            app:tabPadding="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:tabPaddingStart="8dp"
+            app:tabPaddingEnd="8dp"
+            app:tabMinWidth="16dp" />
 
         <RelativeLayout
             android:layout_width="match_parent"
