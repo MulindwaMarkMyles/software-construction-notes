@@ -22,10 +22,9 @@ public class OnboardingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Check if user is already signed in or has completed onboarding
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() != null || SettingsManager.getInstance(this).isOnboardingCompleted()) {
-            startActivity(new Intent(this, MainActivity.class));
+        // Only check if onboarding is completed
+        if (SettingsManager.getInstance(this).isOnboardingCompleted()) {
+            startActivity(new Intent(this, SignInActivity.class));
             finish();
             return;
         }

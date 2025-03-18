@@ -21,7 +21,7 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
-        
+
         // If user is already signed in, go directly to MainActivity
         if (mAuth.getCurrentUser() != null) {
             startActivity(new Intent(this, MainActivity.class));
