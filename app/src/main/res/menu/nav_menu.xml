@@ -23,21 +23,21 @@
             android:title="@string/nav_study" />
         <item
             android:id="@+id/nav_misc"
-            android:icon="@drawable/ic_misc"
+            android:icon="@drawable/button"
             android:title="@string/nav_misc" />
     </group>
 
     <group android:id="@+id/nav_group_other">
         <item
             android:id="@+id/nav_trash"
-            android:icon="@drawable/ic_trash"
+            android:icon="@drawable/delete"
             android:title="@string/nav_trash" />
     </group>
 
     <group android:id="@+id/nav_group_settings">
         <item
             android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_settings"
+            android:icon="@drawable/settings"
             android:title="@string/nav_settings" />
         <item
             android:id="@+id/nav_sign_out"
