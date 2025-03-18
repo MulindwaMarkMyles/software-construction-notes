@@ -82,4 +82,27 @@
     <string name="pref_confirm_delete_summary">Show confirmation dialog when deleting notes</string>
     <string name="pref_trash_retention">Trash Retention</string>
     <string name="pref_trash_retention_summary">How long to keep notes in trash</string>
+    
+    <!-- Auth -->
+    <string name="welcome_back">Welcome Back!</string>
+    <string name="create_account">Create Account</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="no_account">Don't have an account?</string>
+    <string name="have_account">Already have an account?</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="creating_account">Creating account…</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Take Notes Anywhere</string>
+    <string name="onboarding_desc_1">Create, edit and organize your notes on the go</string>
+    <string name="onboarding_title_2">Stay Organized</string>
+    <string name="onboarding_desc_2">Categorize your notes and find them quickly</string>
+    <string name="onboarding_title_3">Secure &amp; Private</string>
+    <string name="onboarding_desc_3">Your notes are encrypted and synced securely</string>
+    <string name="get_started">Get Started</string>
+    <string name="skip">Skip</string>
 </resources>
