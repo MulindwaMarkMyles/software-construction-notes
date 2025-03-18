@@ -2,3 +2,6 @@
 plugins {
     id("com.android.application") version "8.2.1" apply false
 }
+dependencies {
+    classpath 'com.google.gms:google-services:4.3.15' // Ensure it's up to date
+}

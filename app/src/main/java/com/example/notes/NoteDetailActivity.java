@@ -189,7 +189,7 @@ public class NoteDetailActivity extends AppCompatActivity {
             }
 
             // Debug output
-            Toast.makeText(this, "Saving note with ID: " + note.getId(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Saving the note", Toast.LENGTH_SHORT).show();
 
             // Save to database
             long result = databaseHelper.saveNote(note);
@@ -198,7 +198,7 @@ public class NoteDetailActivity extends AppCompatActivity {
                 if (note.getId() <= 0) {
                     note.setId((int) result);
                 }
-                Toast.makeText(this, "Note saved successfully with ID: " + result, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Note saved successfully", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
                 Toast.makeText(this, "Failed to save note", Toast.LENGTH_SHORT).show();

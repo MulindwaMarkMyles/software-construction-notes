@@ -1,0 +1,24 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.1.2" // Upgrade AGP
+        classpath "com.google.gms:google-services:4.4.2" // Ensure compatibility
+    }
+
+}
+
+// Apply plugins correctly
+plugins {
+    // REMOVE 'com.google.gms.google-services' from here, it should be in app-level build.gradle
+}
+
+// Ensure repositories are available for subprojects
+// allprojects {
+//     repositories {
+        // google()
+        // mavenCentral()
+//     }
+// }
