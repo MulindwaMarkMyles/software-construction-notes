@@ -19,16 +19,18 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sign_in);
 
         mAuth = FirebaseAuth.getInstance();
-
-        // If already signed in, go to MainActivity
+        
+        // If already signed in, go to MainActivity and mark onboarding as completed
         if (mAuth.getCurrentUser() != null) {
+            SettingsManager.getInstance(this).setOnboardingCompleted(true);
             startActivity(new Intent(this, MainActivity.class));
             finish();
             return;
         }
+
+        setContentView(R.layout.activity_sign_in);
 
         emailInput = findViewById(R.id.email_input);
         passwordInput = findViewById(R.id.password_input);
@@ -54,6 +56,7 @@ public class SignInActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
+                        SettingsManager.getInstance(this).setOnboardingCompleted(true);
                         startActivity(new Intent(this, MainActivity.class));
                         finish();
                     } else {
