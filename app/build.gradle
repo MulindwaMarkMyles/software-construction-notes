@@ -33,7 +33,7 @@ dependencies {
 
 android {
     namespace 'com.example.notes'
-    compileSdk 33 // Updated from compileSdkVersion
+    compileSdk 34 // Updated from compileSdkVersion
 
     defaultConfig {
         applicationId "com.example.notes"
