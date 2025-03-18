@@ -14,6 +14,7 @@ public class SettingsManager {
     public static final String KEY_DEFAULT_CATEGORY = "default_category";
     public static final String KEY_CONFIRM_DELETE = "confirm_delete";
     public static final String KEY_TRASH_RETENTION = "trash_retention";
+    private static final String KEY_ONBOARDING_COMPLETED = "onboarding_completed";
 
     // Theme values
     public static final String THEME_LIGHT = "light";
@@ -95,5 +96,13 @@ public class SettingsManager {
         // Restore theme setting
         editor.putString("theme_preference", currentTheme);
         editor.apply();
+    }
+
+    public boolean isOnboardingCompleted() {
+        return preferences.getBoolean(KEY_ONBOARDING_COMPLETED, false);
+    }
+
+    public void setOnboardingCompleted(boolean completed) {
+        preferences.edit().putBoolean(KEY_ONBOARDING_COMPLETED, completed).apply();
     }
 }
