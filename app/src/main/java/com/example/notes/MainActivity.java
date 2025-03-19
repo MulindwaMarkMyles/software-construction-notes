@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_sign_out) {
             SettingsManager.getInstance(this).clearUserPreferences(); // You'll need to implement this
             // Clear database before signing out
-            // DatabaseHelper.getInstance(this).clearDatabase();
+            DatabaseHelper.getInstance(this).clearDatabase();
             // Sign out from Firebase
             mAuth.signOut();
             startActivity(new Intent(this, SignInActivity.class)
