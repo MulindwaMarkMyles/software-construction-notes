@@ -59,6 +59,11 @@
     <!-- Actions -->
     <string name="favorite">Favorite</string>
     
+    <!-- Sharing -->
+    <string name="share">Share</string>
+    <string name="share_note">Share Note</string>
+    <string name="share_via">Share via</string>
+    
     <!-- Trash -->
     <string name="no_trashed_notes">No Trashed Notes</string>
     <string name="trash_empty_message">Notes moved to trash will appear here</string>

@@ -242,17 +242,12 @@ public class NoteDetailActivity extends AppCompatActivity {
         return true;
     }
 
-    private void updateFavoriteIcon() {
-        if (menu != null && note != null) {
-            MenuItem favoriteItem = menu.findItem(R.id.action_favorite);
-            if (favoriteItem != null) {
-                favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
-            }
-        }
-    }
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_share) {
+            shareNote();
+            return true;
+        }
         if (item.getItemId() == R.id.action_favorite) {
             toggleFavorite();
             return true;
@@ -262,6 +257,15 @@ public class NoteDetailActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateFavoriteIcon() {
+        if (menu != null && note != null) {
+            MenuItem favoriteItem = menu.findItem(R.id.action_favorite);
+            if (favoriteItem != null) {
+                favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
+            }
+        }
     }
 
     private void toggleFavorite() {
@@ -284,5 +288,16 @@ public class NoteDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error updating favorite status: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private void shareNote() {
+        String shareText = note.getTitle() + "\n\n" + note.getContent();
+        
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, note.getTitle());
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+        
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_note)));
     }
 }
