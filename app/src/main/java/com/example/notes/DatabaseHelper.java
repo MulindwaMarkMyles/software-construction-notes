@@ -554,7 +554,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
     }
-
+    
     public void clearDatabase() {
         SQLiteDatabase db = this.getWritableDatabase();
         // Delete all data from all tables
