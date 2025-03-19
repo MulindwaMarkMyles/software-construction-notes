@@ -554,14 +554,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
     }
-    
-     public void clearDatabase() {
+
+    public void clearDatabase() {
         SQLiteDatabase db = this.getWritableDatabase();
-        // Delete all data from all tables
-        db.delete("notes", null, null);
-        db.delete("trash", null, null);
-        db.delete("favorites", null, null);
-        // Add any other tables that need to be cleared
-        db.close();
+        try {
+            // Only clear the notes table since others don't exist
+            db.delete(TABLE_NOTES, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
+        }
     }
 }

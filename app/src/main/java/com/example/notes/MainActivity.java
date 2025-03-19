@@ -179,13 +179,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(this, TrashActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_sign_out) {
-            // Clear database before signing out
-            DatabaseHelper.getInstance(this).clearDatabase();
-            // Sign out from Firebase
-            mAuth.signOut();
-            startActivity(new Intent(this, SignInActivity.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
-            finish();
+            try {
+                // Clear database before signing out
+                DatabaseHelper.getInstance(this).clearDatabase();
+                // Sign out from Firebase
+                mAuth.signOut();
+                startActivity(new Intent(this, SignInActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                finish();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error signing out", Toast.LENGTH_SHORT).show();
+            }
             return true;
         }
 
