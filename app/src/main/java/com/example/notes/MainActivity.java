@@ -179,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(this, TrashActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_sign_out) {
-            SettingsManager.getInstance(this).clearUserPreferences(); // You'll need to implement this
             // Clear database before signing out
             DatabaseHelper.getInstance(this).clearDatabase();
             // Sign out from Firebase
