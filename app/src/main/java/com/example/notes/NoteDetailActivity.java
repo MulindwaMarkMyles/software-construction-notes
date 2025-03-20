@@ -25,6 +25,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 import android.widget.EditText;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class NoteDetailActivity extends AppCompatActivity {
 
     private TextInputEditText noteHeadingEditText, noteDetailsEditText;
@@ -398,15 +401,15 @@ public class NoteDetailActivity extends AppCompatActivity {
         String notificationTitle = getString(R.string.tag_notification_title);
         String notificationMessage = getString(R.string.tag_notification_message, currentUserEmail, noteTitle);
 
+        // Create notification data map
+        Map<String, Object> notificationData = new HashMap<>();
+        notificationData.put("token", fcmToken);
+        notificationData.put("title", notificationTitle);
+        notificationData.put("message", notificationMessage);
+        notificationData.put("timestamp", System.currentTimeMillis());
+
         // Send to your Firebase Cloud Function or directly using FCM API
         db.collection("notifications")
-                .add(new HashMap<String, Object>() {
-                    {
-                        put("token", fcmToken);
-                        put("title", notificationTitle);
-                        put("message", notificationMessage);
-                        put("timestamp", System.currentTimeMillis());
-                    }
-                });
+                .add(notificationData);
     }
 }
