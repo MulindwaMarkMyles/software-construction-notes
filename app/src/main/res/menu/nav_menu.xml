@@ -27,6 +27,13 @@
             android:title="@string/nav_misc" />
     </group>
 
+    <group android:id="@+id/nav_group_shared">
+        <item
+            android:id="@+id/nav_tagged_notes"
+            android:icon="@drawable/ic_tag"
+            android:title="@string/nav_tagged_notes" />
+    </group>
+
     <group android:id="@+id/nav_group_other">
         <item
             android:id="@+id/nav_trash"
