@@ -16,6 +16,7 @@
     <string name="nav_study">Study</string>
     <string name="nav_misc">Miscellaneous</string>
     <string name="nav_tagged_notes">Tagged Notes</string>
+    <string name="search_tagged_notes">Search tagged Notes</string>
     
     <!-- Navigation Drawer -->
     <string name="navigation_drawer_open">Open navigation drawer</string>
