@@ -25,7 +25,7 @@ import java.util.Locale;
 public class TaggedNotesFragment extends Fragment {
     private static final String TAG = "TaggedNotesFragment";
     private RecyclerView recyclerView;
-    private TextView emptyView;
+    private View emptyState;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private NoteAdapter adapter;
@@ -34,7 +34,7 @@ public class TaggedNotesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tagged_notes, container, false);
         recyclerView = view.findViewById(R.id.tagged_notes_recycler_view);
-        emptyView = view.findViewById(R.id.empty_view);
+        emptyState = view.findViewById(R.id.empty_state);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new NoteAdapter(getContext(), new ArrayList<>()) {
@@ -113,7 +113,7 @@ public class TaggedNotesFragment extends Fragment {
 
                     adapter.updateNotes(notes);
 
-                    emptyView.setVisibility(notes.isEmpty() ? View.VISIBLE : View.GONE);
+                    emptyState.setVisibility(notes.isEmpty() ? View.VISIBLE : View.GONE);
                     recyclerView.setVisibility(notes.isEmpty() ? View.GONE : View.VISIBLE);
                 });
     }
