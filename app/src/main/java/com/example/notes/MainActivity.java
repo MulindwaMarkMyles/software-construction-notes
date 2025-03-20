@@ -156,10 +156,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, 
-                    Manifest.permission.POST_NOTIFICATIONS) != 
-                    PackageManager.PERMISSION_GRANTED) {
-                
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+
                 // Show permission explanation dialog if needed
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.POST_NOTIFICATIONS)) {
@@ -167,8 +166,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             .setTitle("Notification Permission")
                             .setMessage("This app needs notification permission to alert you when " +
                                     "you're tagged in notes.")
-                            .setPositiveButton("OK", (dialog, which) -> 
-                                requestNotificationPermission())
+                            .setPositiveButton("OK", (dialog, which) -> requestNotificationPermission())
                             .setNegativeButton("Cancel", null)
                             .create()
                             .show();
@@ -182,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    new String[] { Manifest.permission.POST_NOTIFICATIONS },
                     NOTIFICATION_PERMISSION_CODE);
         }
     }
@@ -193,10 +191,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIFICATION_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Notification permission granted", 
+                Toast.makeText(this, "Notification permission granted",
                         Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Notification permission denied", 
+                Toast.makeText(this, "Notification permission denied",
                         Toast.LENGTH_SHORT).show();
             }
         }
