@@ -32,18 +32,21 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "Received message from: " + remoteMessage.getFrom());
         Log.d(TAG, "Message data payload: " + remoteMessage.getData());
 
+        // Generate unique notification ID to prevent override
+        int notificationId = new Random().nextInt(1000000);
+
+        // Handle both data messages and notification messages
         if (remoteMessage.getData().size() > 0) {
-            Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-            String title = remoteMessage.getData().get("title");
-            String message = remoteMessage.getData().get("message");
-            showNotification(title, message);
+            Map<String, String> data = remoteMessage.getData();
+            String title = data.get("title");
+            String message = data.get("message");
+            showNotification(title, message, notificationId);
+            Log.d(TAG, "Showing notification with ID: " + notificationId);
         }
 
         if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-            showNotification(
-                    remoteMessage.getNotification().getTitle(),
-                    remoteMessage.getNotification().getBody());
+            RemoteMessage.Notification notification = remoteMessage.getNotification();
+            showNotification(notification.getTitle(), notification.getBody(), notificationId);
         }
     }
 
@@ -63,46 +66,62 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
 
     public static void sendDirectNotification(Context context, String targetToken, String title, String message) {
         Log.d(TAG, "Attempting to send notification to token: " + targetToken);
-        Log.d(TAG, "Notification content - Title: " + title + ", Message: " + message);
 
         Map<String, String> data = new HashMap<>();
         data.put("title", title);
         data.put("message", message);
+        data.put("timestamp", String.valueOf(System.currentTimeMillis()));
 
-        FirebaseMessaging.getInstance()
-                .subscribeToTopic("notifications")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Successfully subscribed to notifications topic");
-                        // Now send the message
-                        FirebaseMessaging.getInstance().send(new RemoteMessage.Builder(targetToken)
-                                .setMessageId(Integer.toString(new Random().nextInt(1000)))
-                                .setData(data)
-                                .build());
-                        Log.d(TAG, "Notification sent successfully");
-                    } else {
-                        Log.e(TAG, "Failed to subscribe to notifications topic", task.getException());
-                    }
-                });
+        try {
+            RemoteMessage.Builder builder = new RemoteMessage.Builder(targetToken)
+                    .setMessageId(String.valueOf(System.currentTimeMillis()))
+                    .setTtl(3600); // 1 hour expiry
+
+            for (Map.Entry<String, String> entry : data.entrySet()) {
+                builder.addData(entry.getKey(), entry.getValue());
+            }
+
+            FirebaseMessaging.getInstance().send(builder.build());
+            Log.d(TAG, "Notification sent successfully to token: " + targetToken);
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending notification: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
-    private void showNotification(String title, String message) {
-        createNotificationChannel();
+    private void showNotification(String title, String message, int notificationId) {
+        try {
+            createNotificationChannel();
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent);
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    this,
+                    notificationId, // Use unique request code
+                    intent,
+                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.notify(0, builder.build());
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL)
+                    .setContentIntent(pendingIntent);
+
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (manager != null) {
+                manager.notify(notificationId, builder.build());
+                Log.d(TAG, "Notification displayed successfully");
+            } else {
+                Log.e(TAG, "NotificationManager is null");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing notification: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void createNotificationChannel() {
@@ -110,11 +129,17 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     getString(R.string.channel_name),
-                    NotificationManager.IMPORTANCE_DEFAULT);
+                    NotificationManager.IMPORTANCE_HIGH);
+
             channel.setDescription(getString(R.string.channel_description));
+            channel.enableLights(true);
+            channel.enableVibration(true);
 
             NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+                Log.d(TAG, "NotificationChannel created successfully");
+            }
         }
     }
 }
