@@ -31,6 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.example.notes.adapter.UserSearchAdapter;
+import com.example.notes.model.UserTag;
+import com.google.firebase.firestore.DocumentSnapshot;
+
 public class NoteDetailActivity extends AppCompatActivity {
 
     private TextInputEditText noteHeadingEditText, noteDetailsEditText;
