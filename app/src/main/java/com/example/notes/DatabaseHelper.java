@@ -81,10 +81,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             try {
                 db.execSQL("ALTER TABLE " + TABLE_NOTES + " ADD COLUMN " + KEY_NOTE_DELETED + " INTEGER DEFAULT 0");
             } catch (Exception e) {
-                // Column might already exist, recreate the table in case of issues
-                db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTES);
-                onCreate(db);
+                // Column might already exist
+                e.printStackTrace();
             }
+        }
+
+        // Create note_tags table if it doesn't exist
+        try {
+            String CREATE_TAGS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_TAGS + "("
+                    + KEY_TAG_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + KEY_TAG_NOTE_ID + " INTEGER,"
+                    + KEY_TAG_USER_ID + " TEXT,"
+                    + KEY_TAG_EMAIL + " TEXT,"
+                    + "FOREIGN KEY(" + KEY_TAG_NOTE_ID + ") REFERENCES " + TABLE_NOTES + "(" + KEY_NOTE_ID + ")"
+                    + ")";
+            db.execSQL(CREATE_TAGS_TABLE);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
