@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,8 +15,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.notes.model.SharedNote;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class TaggedNotesFragment extends Fragment {
     private static final String TAG = "TaggedNotesFragment";
@@ -32,21 +36,39 @@ public class TaggedNotesFragment extends Fragment {
         emptyView = view.findViewById(R.id.empty_view);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new NoteAdapter(getContext(), new ArrayList<>());
-        recyclerView.setAdapter(adapter);
+        adapter = new NoteAdapter(getContext(), new ArrayList<>()) {
+            @Override
+            public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
+                super.onBindViewHolder(holder, position);
 
-        // Set item click listener for the adapter
-        adapter.setOnItemClickListener(note -> {
-            Intent intent = new Intent(getActivity(), NoteDetailActivity.class);
-            intent.putExtra("noteId", note.getId());
-            startActivity(intent);
-        });
+                // Show full content instead of preview
+                Note note = getNoteAtPosition(position);
+                holder.contentPreview.setMaxLines(Integer.MAX_VALUE);
+                holder.contentPreview.setEllipsize(null);
+
+                // Add "Shared by" info
+                holder.dateTextView.setText(String.format("Shared by %s • %s",
+                        note.getTitle(),
+                        formatDate(note.getTimestamp())));
+
+                // Remove click feedback
+                holder.itemView.setBackground(null);
+                holder.itemView.setClickable(false);
+                holder.itemView.setFocusable(false);
+            }
+        };
+        recyclerView.setAdapter(adapter);
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
         loadTaggedNotes();
         return view;
+    }
+
+    private String formatDate(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
     }
 
     private void loadTaggedNotes() {
