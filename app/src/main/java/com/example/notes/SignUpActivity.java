@@ -10,6 +10,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.util.HashMap;
 
 public class SignUpActivity extends AppCompatActivity {
     private EditText emailInput, passwordInput, confirmPasswordInput;
@@ -53,8 +57,25 @@ public class SignUpActivity extends AppCompatActivity {
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        startActivity(new Intent(this, MainActivity.class));
-                        finish();
+                        // Get FCM token and store in Firestore
+                        FirebaseMessaging.getInstance().getToken()
+                            .addOnCompleteListener(tokenTask -> {
+                                if (tokenTask.isSuccessful()) {
+                                    String token = tokenTask.getResult();
+                                    String userId = mAuth.getCurrentUser().getUid();
+                                    
+                                    // Store user data in Firestore
+                                    FirebaseFirestore.getInstance()
+                                        .collection("users")
+                                        .document(userId)
+                                        .set(new HashMap<String, Object>() {{
+                                            put("email", email);
+                                            put("fcmToken", token);
+                                        }});
+                                }
+                                startActivity(new Intent(this, MainActivity.class));
+                                finish();
+                            });
                     } else {
                         Toast.makeText(this, "Sign up failed: " + task.getException().getMessage(),
                                 Toast.LENGTH_SHORT).show();

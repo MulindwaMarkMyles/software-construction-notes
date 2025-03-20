@@ -111,4 +111,10 @@
     <string name="get_started">Get Started</string>
     <string name="skip">Skip</string>
     <string name="next">Next</string>
+    
+    <!-- Notifications -->
+    <string name="channel_name">Note Notifications</string>
+    <string name="channel_description">Notifications for tagged notes</string>
+    <string name="tag_notification_title">You\'ve been tagged in a note</string>
+    <string name="tag_notification_message">%1$s has tagged you in a note: %2$s</string>
 </resources>
