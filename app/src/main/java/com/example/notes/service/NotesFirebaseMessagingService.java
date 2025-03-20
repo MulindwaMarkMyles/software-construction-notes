@@ -19,6 +19,8 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class NotesFirebaseMessagingService extends FirebaseMessagingService {
@@ -27,7 +29,8 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
-        Log.d(TAG, "Message received from: " + remoteMessage.getFrom());
+        Log.d(TAG, "Received message from: " + remoteMessage.getFrom());
+        Log.d(TAG, "Message data payload: " + remoteMessage.getData());
 
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
@@ -59,13 +62,28 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     public static void sendDirectNotification(Context context, String targetToken, String title, String message) {
-        FirebaseMessaging.getInstance().send(new RemoteMessage.Builder(targetToken)
-                .setMessageId(Integer.toString(new Random().nextInt(1000)))
-                .addData("title", title)
-                .addData("message", message)
-                .build());
+        Log.d(TAG, "Attempting to send notification to token: " + targetToken);
+        Log.d(TAG, "Notification content - Title: " + title + ", Message: " + message);
 
-        Log.d(TAG, "Notification sent to token: " + targetToken);
+        Map<String, String> data = new HashMap<>();
+        data.put("title", title);
+        data.put("message", message);
+
+        FirebaseMessaging.getInstance()
+                .subscribeToTopic("notifications")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "Successfully subscribed to notifications topic");
+                        // Now send the message
+                        FirebaseMessaging.getInstance().send(new RemoteMessage.Builder(targetToken)
+                                .setMessageId(Integer.toString(new Random().nextInt(1000)))
+                                .setData(data)
+                                .build());
+                        Log.d(TAG, "Notification sent successfully");
+                    } else {
+                        Log.e(TAG, "Failed to subscribe to notifications topic", task.getException());
+                    }
+                });
     }
 
     private void showNotification(String title, String message) {

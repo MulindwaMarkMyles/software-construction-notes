@@ -427,9 +427,30 @@ public class NoteDetailActivity extends AppCompatActivity {
 
     private void tagUser(String userId, String email) {
         if (note != null && note.getId() > 0) {
+            // Save to local database
             databaseHelper.addTagToNote(note.getId(), userId, email);
-            // Send notification using FCM
-            sendTagNotification(userId, email);
+
+            // Save to Firestore for cross-device sync
+            SharedNote sharedNote = new SharedNote(
+                    String.valueOf(note.getId()),
+                    note.getTitle(),
+                    note.getContent(),
+                    note.getCategory(),
+                    mAuth.getCurrentUser().getUid(),
+                    mAuth.getCurrentUser().getEmail(),
+                    userId);
+
+            db.collection("shared_notes")
+                    .add(sharedNote)
+                    .addOnSuccessListener(documentReference -> {
+                        Log.d(TAG, "SharedNote added with ID: " + documentReference.getId());
+                        // Send notification after successful sharing
+                        sendTagNotification(userId, email);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error adding shared note", e);
+                        Toast.makeText(this, "Failed to share note", Toast.LENGTH_SHORT).show();
+                    });
         }
     }
 

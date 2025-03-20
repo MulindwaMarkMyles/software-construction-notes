@@ -11,15 +11,16 @@ public class SharedNote {
     private String ownerUserId;
     private String ownerEmail;
     private String taggedUserId;
-    
+
     @ServerTimestamp
     private Date timestamp;
 
     // Add constructors, getters, and setters
-    public SharedNote() {} // Required for Firestore
+    public SharedNote() {
+    } // Required for Firestore
 
-    public SharedNote(String noteId, String title, String content, String category, 
-                     String ownerUserId, String ownerEmail, String taggedUserId) {
+    public SharedNote(String noteId, String title, String content, String category,
+            String ownerUserId, String ownerEmail, String taggedUserId) {
         this.noteId = noteId;
         this.title = title;
         this.content = content;
