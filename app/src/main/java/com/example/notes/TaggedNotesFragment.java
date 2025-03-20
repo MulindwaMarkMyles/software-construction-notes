@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,20 +42,31 @@ public class TaggedNotesFragment extends Fragment {
             public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
                 super.onBindViewHolder(holder, position);
 
-                // Show full content instead of preview
                 Note note = getNoteAtPosition(position);
-                holder.contentPreview.setMaxLines(Integer.MAX_VALUE);
-                holder.contentPreview.setEllipsize(null);
 
-                // Add "Shared by" info
-                holder.dateTextView.setText(String.format("Shared by %s • %s",
-                        note.getTitle(),
-                        formatDate(note.getTimestamp())));
+                // Style the note item
+                holder.titleTextView.setText("From: " + note.getTitle());
+                holder.contentPreview.setMaxLines(4); // Show more content but not everything
+                holder.contentPreview.setTextSize(14); // Slightly smaller text
 
-                // Remove click feedback
-                holder.itemView.setBackground(null);
+                // Show date and owner info
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy 'at' h:mm a", Locale.getDefault());
+                String dateStr = sdf.format(new Date(note.getTimestamp()));
+                holder.dateTextView.setText(dateStr);
+                holder.dateTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorAccent));
+
+                // Make category chip more prominent
+                holder.categoryChip.setTextSize(12);
+                holder.categoryChip.setChipStrokeWidth(1);
+
+                // Remove clickable background but keep visual separation
+                holder.itemView.setBackgroundResource(R.drawable.tagged_note_background);
                 holder.itemView.setClickable(false);
                 holder.itemView.setFocusable(false);
+
+                // Add some padding to the item
+                int padding = getResources().getDimensionPixelSize(R.dimen.tagged_note_padding);
+                holder.itemView.setPadding(padding, padding, padding, padding);
             }
         };
         recyclerView.setAdapter(adapter);
