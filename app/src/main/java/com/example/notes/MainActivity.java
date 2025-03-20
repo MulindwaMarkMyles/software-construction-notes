@@ -1,6 +1,9 @@
 package com.example.notes;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -28,6 +33,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+
+    private static final int NOTIFICATION_PERMISSION_CODE = 123;
 
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
@@ -71,6 +78,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             // Initialize database
             DatabaseHelper.getInstance(this).getWritableDatabase();
+
+            // Check for notification permission
+            checkNotificationPermission();
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error initializing app", Toast.LENGTH_LONG).show();
@@ -141,6 +151,54 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Exception e) {
             e.printStackTrace();
             // Handle gracefully to prevent app crash
+        }
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, 
+                    Manifest.permission.POST_NOTIFICATIONS) != 
+                    PackageManager.PERMISSION_GRANTED) {
+                
+                // Show permission explanation dialog if needed
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.POST_NOTIFICATIONS)) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Notification Permission")
+                            .setMessage("This app needs notification permission to alert you when " +
+                                    "you're tagged in notes.")
+                            .setPositiveButton("OK", (dialog, which) -> 
+                                requestNotificationPermission())
+                            .setNegativeButton("Cancel", null)
+                            .create()
+                            .show();
+                } else {
+                    requestNotificationPermission();
+                }
+            }
+        }
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    NOTIFICATION_PERMISSION_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Notification permission granted", 
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Notification permission denied", 
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

@@ -117,4 +117,10 @@
     <string name="channel_description">Notifications for tagged notes</string>
     <string name="tag_notification_title">You\'ve been tagged in a note</string>
     <string name="tag_notification_message">%1$s has tagged you in a note: %2$s</string>
+    
+    <!-- Permissions -->
+    <string name="notification_permission_title">Notification Permission</string>
+    <string name="notification_permission_message">This app needs notification permission to alert you when you\'re tagged in notes.</string>
+    <string name="notification_permission_granted">Notification permission granted</string>
+    <string name="notification_permission_denied">Notification permission denied</string>
 </resources>
