@@ -68,6 +68,8 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
         Map<String, String> data = new HashMap<>();
         data.put("title", title);
         data.put("message", message);
+        data.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        data.put("priority", "high");
 
         FirebaseMessaging.getInstance()
                 .subscribeToTopic("notifications")
@@ -87,34 +89,72 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void showNotification(String title, String message) {
-        createNotificationChannel();
+        try {
+            Log.d(TAG, "Showing notification - Title: " + title + ", Message: " + message);
+            
+            createNotificationChannel();
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            
+            // Use unique request code based on time
+            int requestCode = (int) System.currentTimeMillis();
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .setDefaults(NotificationCompat.DEFAULT_ALL);
 
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.notify(0, builder.build());
+            NotificationManager notificationManager = 
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            
+            if (notificationManager != null) {
+                // Use unique ID for each notification
+                int notificationId = (int) System.currentTimeMillis();
+                notificationManager.notify(notificationId, builder.build());
+                Log.d(TAG, "Notification shown successfully with ID: " + notificationId);
+            } else {
+                Log.e(TAG, "NotificationManager is null");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing notification", e);
+        }
     }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
+            try {
+                NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     getString(R.string.channel_name),
-                    NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription(getString(R.string.channel_description));
-
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
+                    NotificationManager.IMPORTANCE_HIGH
+                );
+                
+                channel.setDescription(getString(R.string.channel_description));
+                channel.enableLights(true);
+                channel.enableVibration(true);
+                
+                NotificationManager notificationManager = 
+                    getSystemService(NotificationManager.class);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(channel);
+                    Log.d(TAG, "NotificationChannel created successfully");
+                } else {
+                    Log.e(TAG, "NotificationManager is null while creating channel");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error creating notification channel", e);
+            }
         }
     }
 }
