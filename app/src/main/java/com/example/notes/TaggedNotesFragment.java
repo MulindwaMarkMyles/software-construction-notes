@@ -13,8 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.example.notes.adapter.NoteAdapter;
-import com.example.notes.model.Note;
 import com.example.notes.model.SharedNote;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +37,7 @@ public class TaggedNotesFragment extends Fragment {
         
         // Set item click listener for the adapter
         adapter.setOnItemClickListener(position -> {
-            Note note = adapter.getNotes().get(position);
+            Note note = adapter.getNoteAtPosition(position);
             Intent intent = new Intent(getActivity(), NoteDetailActivity.class);
             intent.putExtra("noteId", note.getId());
             startActivity(intent);
@@ -81,8 +79,7 @@ public class TaggedNotesFragment extends Fragment {
                         }
                     }
 
-                    adapter.setNotes(notes);
-                    adapter.notifyDataSetChanged();
+                    adapter.updateNotes(notes);
                     
                     emptyView.setVisibility(notes.isEmpty() ? View.VISIBLE : View.GONE);
                     recyclerView.setVisibility(notes.isEmpty() ? View.GONE : View.VISIBLE);

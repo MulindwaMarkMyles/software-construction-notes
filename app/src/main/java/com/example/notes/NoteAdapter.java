@@ -159,6 +159,20 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return sdf.format(new Date(timestamp));
     }
 
+    public Note getNoteAtPosition(int position) {
+        return notesList.get(position);
+    }
+
+    public List<Note> getNotes() {
+        return notesList;
+    }
+
+    public void updateNotes(List<Note> newNotes) {
+        this.notesList.clear();
+        this.notesList.addAll(newNotes);
+        notifyDataSetChanged();
+    }
+
     class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView, contentPreview, dateTextView;
         Chip categoryChip;
