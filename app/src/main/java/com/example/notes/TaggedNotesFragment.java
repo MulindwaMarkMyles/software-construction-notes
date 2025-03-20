@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -26,16 +27,30 @@ public class TaggedNotesFragment extends Fragment {
     private static final String TAG = "TaggedNotesFragment";
     private RecyclerView recyclerView;
     private View emptyState;
+    private SearchView searchView;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private NoteAdapter adapter;
+    private List<Note> allTaggedNotes = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tagged_notes, container, false);
         recyclerView = view.findViewById(R.id.tagged_notes_recycler_view);
         emptyState = view.findViewById(R.id.empty_state);
+        searchView = view.findViewById(R.id.search_view);
 
+        setupRecyclerView();
+        setupSearchView();
+
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+
+        loadTaggedNotes();
+        return view;
+    }
+
+    private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new NoteAdapter(getContext(), new ArrayList<>()) {
             @Override
@@ -70,12 +85,47 @@ public class TaggedNotesFragment extends Fragment {
             }
         };
         recyclerView.setAdapter(adapter);
+    }
 
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterNotes(query);
+                return true;
+            }
 
-        loadTaggedNotes();
-        return view;
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterNotes(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filterNotes(String query) {
+        List<Note> filteredNotes = new ArrayList<>();
+        String lowercaseQuery = query.toLowerCase().trim();
+
+        if (lowercaseQuery.isEmpty()) {
+            filteredNotes.addAll(allTaggedNotes);
+        } else {
+            for (Note note : allTaggedNotes) {
+                if (note.getTitle().toLowerCase().contains(lowercaseQuery) ||
+                        note.getContent().toLowerCase().contains(lowercaseQuery) ||
+                        note.getCategory().toLowerCase().contains(lowercaseQuery)) {
+                    filteredNotes.add(note);
+                }
+            }
+        }
+
+        adapter.updateNotes(filteredNotes);
+        updateEmptyState(filteredNotes.isEmpty());
+    }
+
+    private void updateEmptyState(boolean isEmpty) {
+        emptyState.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
     }
 
     private String formatDate(long timestamp) {
@@ -93,7 +143,7 @@ public class TaggedNotesFragment extends Fragment {
                         return;
                     }
 
-                    List<Note> notes = new ArrayList<>();
+                    allTaggedNotes.clear();
                     if (value != null && !value.isEmpty()) {
                         for (DocumentSnapshot doc : value.getDocuments()) {
                             SharedNote sharedNote = doc.toObject(SharedNote.class);
@@ -106,15 +156,18 @@ public class TaggedNotesFragment extends Fragment {
                                         sharedNote.getTimestamp() != null ? sharedNote.getTimestamp().getTime()
                                                 : System.currentTimeMillis(),
                                         0);
-                                notes.add(note);
+                                allTaggedNotes.add(note);
                             }
                         }
                     }
 
-                    adapter.updateNotes(notes);
-
-                    emptyState.setVisibility(notes.isEmpty() ? View.VISIBLE : View.GONE);
-                    recyclerView.setVisibility(notes.isEmpty() ? View.GONE : View.VISIBLE);
+                    // Apply any existing filter
+                    if (searchView != null && searchView.getQuery().length() > 0) {
+                        filterNotes(searchView.getQuery().toString());
+                    } else {
+                        adapter.updateNotes(allTaggedNotes);
+                        updateEmptyState(allTaggedNotes.isEmpty());
+                    }
                 });
     }
 }
