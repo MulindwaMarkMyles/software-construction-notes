@@ -16,6 +16,15 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import android.text.Editable;
+import android.text.TextWatcher;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
+import android.widget.EditText;
+
 public class NoteDetailActivity extends AppCompatActivity {
 
     private TextInputEditText noteHeadingEditText, noteDetailsEditText;
@@ -28,6 +37,8 @@ public class NoteDetailActivity extends AppCompatActivity {
     private Chip chipPersonal, chipWork, chipStudy, chipMisc;
     private String currentCategory = "Personal";
     private Menu menu;
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +103,27 @@ public class NoteDetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 deleteNote();
+            }
+        });
+
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+
+        // Add text watcher for @ symbol
+        noteDetailsEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (count > 0 && s.charAt(start) == '@') {
+                    showUserSearchDialog();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
     }
@@ -299,5 +331,57 @@ public class NoteDetailActivity extends AppCompatActivity {
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
 
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share_note)));
+    }
+
+    private void showUserSearchDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_user_search, null);
+        EditText searchInput = view.findViewById(R.id.search_input);
+        RecyclerView userList = view.findViewById(R.id.user_list);
+
+        builder.setView(view);
+        AlertDialog dialog = builder.create();
+
+        // Search for users as user types
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                searchUsers(s.toString(), userList);
+            }
+            // ... other required methods
+        });
+
+        dialog.show();
+    }
+
+    private void searchUsers(String query, RecyclerView userList) {
+        db.collection("users")
+                .whereGreaterThanOrEqualTo("email", query)
+                .whereLessThanOrEqualTo("email", query + '\uf8ff')
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    // Show users in RecyclerView
+                    // When user is selected, add tag to note and send notification
+                });
+    }
+
+    private void tagUser(String userId, String email) {
+        if (note != null && note.getId() > 0) {
+            databaseHelper.addTagToNote(note.getId(), userId, email);
+            // Send notification using FCM
+            sendTagNotification(userId, email);
+        }
+    }
+
+    private void sendTagNotification(String userId, String email) {
+        // Get user's FCM token from Firestore
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(document -> {
+                    String fcmToken = document.getString("fcmToken");
+                    if (fcmToken != null) {
+                        // Send FCM notification
+                        sendFCMNotification(fcmToken, note.getTitle());
+                    }
+                });
     }
 }

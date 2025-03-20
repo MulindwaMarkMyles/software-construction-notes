@@ -16,6 +16,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Table Names
     private static final String TABLE_NOTES = "notes";
+    private static final String TABLE_TAGS = "note_tags";
 
     // Note Table Columns
     private static final String KEY_NOTE_ID = "id";
@@ -26,6 +27,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_NOTE_PRIORITY = "priority";
     private static final String KEY_NOTE_FAVORITE = "is_favorite";
     private static final String KEY_NOTE_DELETED = "is_deleted";
+
+    // Tag Table Columns
+    private static final String KEY_TAG_ID = "tag_id";
+    private static final String KEY_TAG_NOTE_ID = "note_id";
+    private static final String KEY_TAG_USER_ID = "user_id";
+    private static final String KEY_TAG_EMAIL = "email";
 
     // Singleton instance
     private static DatabaseHelper instance;
@@ -54,6 +61,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + KEY_NOTE_DELETED + " INTEGER DEFAULT 0"
                 + ")";
         db.execSQL(CREATE_NOTES_TABLE);
+
+        String CREATE_TAGS_TABLE = "CREATE TABLE " + TABLE_TAGS + "("
+                + KEY_TAG_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_TAG_NOTE_ID + " INTEGER,"
+                + KEY_TAG_USER_ID + " TEXT,"
+                + KEY_TAG_EMAIL + " TEXT,"
+                + "FOREIGN KEY(" + KEY_TAG_NOTE_ID + ") REFERENCES " + TABLE_NOTES + "(" + KEY_NOTE_ID + ")"
+                + ")";
+        db.execSQL(CREATE_TAGS_TABLE);
     }
 
     @Override
@@ -567,5 +583,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.endTransaction();
             }
         }
+    }
+
+    public void addTagToNote(long noteId, String userId, String email) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_TAG_NOTE_ID, noteId);
+        values.put(KEY_TAG_USER_ID, userId);
+        values.put(KEY_TAG_EMAIL, email);
+
+        db.insert(TABLE_TAGS, null, values);
+    }
+
+    public List<UserTag> getTagsForNote(long noteId) {
+        List<UserTag> tags = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+
+        Cursor cursor = db.query(TABLE_TAGS, null,
+                KEY_TAG_NOTE_ID + "=?",
+                new String[] { String.valueOf(noteId) }, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                UserTag tag = new UserTag(
+                        cursor.getString(cursor.getColumnIndex(KEY_TAG_USER_ID)),
+                        cursor.getString(cursor.getColumnIndex(KEY_TAG_EMAIL)),
+                        null);
+                tags.add(tag);
+            } while (cursor.moveToNext());
+        }
+
+        if (cursor != null)
+            cursor.close();
+        return tags;
     }
 }
