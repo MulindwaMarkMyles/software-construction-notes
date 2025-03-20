@@ -38,9 +38,9 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {
             FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(auth.getCurrentUser().getUid())
-                .update("fcmToken", token);
+                    .collection("users")
+                    .document(auth.getCurrentUser().getUid())
+                    .update("fcmToken", token);
         }
     }
 
@@ -70,7 +70,7 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
                     getString(R.string.channel_name),
                     NotificationManager.IMPORTANCE_DEFAULT);
             channel.setDescription(getString(R.string.channel_description));
-            
+
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
         }

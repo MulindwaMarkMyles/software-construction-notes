@@ -59,23 +59,25 @@ public class SignUpActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // Get FCM token and store in Firestore
                         FirebaseMessaging.getInstance().getToken()
-                            .addOnCompleteListener(tokenTask -> {
-                                if (tokenTask.isSuccessful()) {
-                                    String token = tokenTask.getResult();
-                                    String userId = mAuth.getCurrentUser().getUid();
-                                    
-                                    // Store user data in Firestore
-                                    FirebaseFirestore.getInstance()
-                                        .collection("users")
-                                        .document(userId)
-                                        .set(new HashMap<String, Object>() {{
-                                            put("email", email);
-                                            put("fcmToken", token);
-                                        }});
-                                }
-                                startActivity(new Intent(this, MainActivity.class));
-                                finish();
-                            });
+                                .addOnCompleteListener(tokenTask -> {
+                                    if (tokenTask.isSuccessful()) {
+                                        String token = tokenTask.getResult();
+                                        String userId = mAuth.getCurrentUser().getUid();
+
+                                        // Store user data in Firestore
+                                        FirebaseFirestore.getInstance()
+                                                .collection("users")
+                                                .document(userId)
+                                                .set(new HashMap<String, Object>() {
+                                                    {
+                                                        put("email", email);
+                                                        put("fcmToken", token);
+                                                    }
+                                                });
+                                    }
+                                    startActivity(new Intent(this, MainActivity.class));
+                                    finish();
+                                });
                     } else {
                         Toast.makeText(this, "Sign up failed: " + task.getException().getMessage(),
                                 Toast.LENGTH_SHORT).show();
