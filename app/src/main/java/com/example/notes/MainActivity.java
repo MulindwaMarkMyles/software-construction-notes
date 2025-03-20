@@ -206,21 +206,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
+        if (id == R.id.nav_tagged_notes) {
+            // Hide ViewPager and show fragment container
+            viewPager.setVisibility(View.GONE);
+            findViewById(R.id.fragment_container).setVisibility(View.VISIBLE);
+
+            // Replace current fragment with TaggedNotesFragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new TaggedNotesFragment())
+                    .commit();
+
+            setTitle(R.string.nav_tagged_notes);
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        } else {
+            // For other menu items, show ViewPager and hide fragment container
+            viewPager.setVisibility(View.VISIBLE);
+            findViewById(R.id.fragment_container).setVisibility(View.GONE);
+        }
+
         // Close any open search
         NotesListFragment currentFragment = getCurrentFragment();
         if (currentFragment != null) {
             currentFragment.closeSearch();
-        }
-
-        if (id == R.id.nav_tagged_notes) {
-            // Replace current fragment with TaggedNotesFragment
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new TaggedNotesFragment())
-                    .addToBackStack(null)
-                    .commit();
-            setTitle(R.string.nav_tagged_notes);
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
         }
 
         if (id == R.id.nav_all_notes) {
@@ -287,6 +295,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (findViewById(R.id.fragment_container).getVisibility() == View.VISIBLE) {
+            // If we're showing a fragment, go back to main view
+            findViewById(R.id.fragment_container).setVisibility(View.GONE);
+            viewPager.setVisibility(View.VISIBLE);
+            setTitle(R.string.app_name);
         } else {
             super.onBackPressed();
         }

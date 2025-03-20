@@ -29,10 +29,6 @@
                 android:id="@+id/nav_misc"
                 android:icon="@drawable/button"
                 android:title="@string/category_misc" />
-            <item
-                android:id="@+id/nav_tagged_notes"
-                android:icon="@drawable/tag"
-                android:title="@string/nav_tagged_notes" />
         </menu>
     </item>
     <item android:title="Miscellaneous">
@@ -47,6 +43,12 @@
                 android:title="@string/nav_trash" />
         </menu>
     </item>
+    <group android:id="@+id/nav_group_shared">
+        <item
+            android:id="@+id/nav_tagged_notes"
+            android:icon="@drawable/tag"
+            android:title="@string/nav_tagged_notes" />
+    </group>
      <item android:title="@string/nav_extra">
         <item
             android:id="@+id/nav_sign_out"
