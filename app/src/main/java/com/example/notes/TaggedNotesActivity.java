@@ -41,6 +41,10 @@ public class TaggedNotesActivity extends AppCompatActivity {
         // Setup toolbar with back navigation
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         // Initialize views
@@ -74,6 +78,23 @@ public class TaggedNotesActivity extends AppCompatActivity {
 
         // Load notes
         loadTaggedNotes();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // If search is active and has text, clear it
+        if (searchView != null && !searchView.getQuery().toString().isEmpty()) {
+            searchView.setQuery("", false);
+            searchView.clearFocus();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
     private void filterNotes(String query) {

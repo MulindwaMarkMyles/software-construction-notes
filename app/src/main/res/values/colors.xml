@@ -39,4 +39,7 @@
     <color name="priority_high">@color/gray_900</color>
     <color name="priority_medium">@color/gray_700</color>
     <color name="priority_low">@color/gray_500</color>
+    
+    <color name="background">#FAFAFA</color>
+    <color name="chipBackground">#E0E0E0</color>
 </resources>

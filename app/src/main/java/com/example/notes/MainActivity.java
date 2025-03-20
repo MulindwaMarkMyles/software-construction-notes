@@ -207,16 +207,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.nav_tagged_notes) {
-            // Hide ViewPager and show fragment container
-            viewPager.setVisibility(View.GONE);
-            findViewById(R.id.fragment_container).setVisibility(View.VISIBLE);
-
-            // Replace current fragment with TaggedNotesFragment
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new TaggedNotesFragment())
-                    .commit();
-
-            setTitle(R.string.nav_tagged_notes);
+            // Start TaggedNotesActivity instead of loading fragment
+            Intent intent = new Intent(this, TaggedNotesActivity.class);
+            startActivity(intent);
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         } else {
