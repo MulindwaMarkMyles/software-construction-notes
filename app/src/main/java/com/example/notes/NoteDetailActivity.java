@@ -345,10 +345,17 @@ public class NoteDetailActivity extends AppCompatActivity {
         // Search for users as user types
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
             public void afterTextChanged(Editable s) {
                 searchUsers(s.toString(), userList);
             }
-            // ... other required methods
         });
 
         dialog.show();
@@ -381,6 +388,24 @@ public class NoteDetailActivity extends AppCompatActivity {
                     if (fcmToken != null) {
                         // Send FCM notification
                         sendFCMNotification(fcmToken, note.getTitle());
+                    }
+                });
+    }
+
+    private void sendFCMNotification(String fcmToken, String noteTitle) {
+        // Prepare notification data
+        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+        String notificationTitle = getString(R.string.tag_notification_title);
+        String notificationMessage = getString(R.string.tag_notification_message, currentUserEmail, noteTitle);
+
+        // Send to your Firebase Cloud Function or directly using FCM API
+        db.collection("notifications")
+                .add(new HashMap<String, Object>() {
+                    {
+                        put("token", fcmToken);
+                        put("title", notificationTitle);
+                        put("message", notificationMessage);
+                        put("timestamp", System.currentTimeMillis());
                     }
                 });
     }
