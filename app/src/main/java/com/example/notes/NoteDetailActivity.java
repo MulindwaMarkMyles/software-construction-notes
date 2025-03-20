@@ -36,6 +36,7 @@ import com.example.notes.model.UserTag;
 import com.google.firebase.firestore.DocumentSnapshot;
 import android.util.Log;
 import com.example.notes.service.NotesFirebaseMessagingService;
+import com.example.notes.model.SharedNote;
 
 public class NoteDetailActivity extends AppCompatActivity {
 
