@@ -39,9 +39,8 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
             showNotification(
-                remoteMessage.getNotification().getTitle(),
-                remoteMessage.getNotification().getBody()
-            );
+                    remoteMessage.getNotification().getTitle(),
+                    remoteMessage.getNotification().getBody());
         }
     }
 
@@ -61,11 +60,11 @@ public class NotesFirebaseMessagingService extends FirebaseMessagingService {
 
     public static void sendDirectNotification(Context context, String targetToken, String title, String message) {
         FirebaseMessaging.getInstance().send(new RemoteMessage.Builder(targetToken)
-            .setMessageId(Integer.toString(new Random().nextInt(1000)))
-            .addData("title", title)
-            .addData("message", message)
-            .build());
-        
+                .setMessageId(Integer.toString(new Random().nextInt(1000)))
+                .addData("title", title)
+                .addData("message", message)
+                .build());
+
         Log.d(TAG, "Notification sent to token: " + targetToken);
     }
 

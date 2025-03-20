@@ -34,9 +34,12 @@ import java.util.Map;
 import com.example.notes.adapter.UserSearchAdapter;
 import com.example.notes.model.UserTag;
 import com.google.firebase.firestore.DocumentSnapshot;
+import android.util.Log;
+import com.example.notes.service.NotesFirebaseMessagingService;
 
 public class NoteDetailActivity extends AppCompatActivity {
 
+    private static final String TAG = "NoteDetailActivity";
     private TextInputEditText noteHeadingEditText, noteDetailsEditText;
     private MaterialButton updateButton, deleteButton;
     private long noteId;
@@ -431,32 +434,30 @@ public class NoteDetailActivity extends AppCompatActivity {
     }
 
     private void sendTagNotification(String userId, String email) {
-        // Get user's FCM token from Firestore
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(document -> {
                     String fcmToken = document.getString("fcmToken");
                     if (fcmToken != null) {
-                        // Send notification data
                         String currentUserEmail = mAuth.getCurrentUser().getEmail();
-                        Map<String, Object> notificationData = new HashMap<>();
-                        notificationData.put("to", fcmToken);
-                        notificationData.put("data", new HashMap<String, String>() {
-                            {
-                                put("title", getString(R.string.tag_notification_title));
-                                put("message", getString(R.string.tag_notification_message, currentUserEmail,
-                                        note.getTitle()));
-                                put("noteId", String.valueOf(note.getId()));
-                            }
-                        });
+                        String title = getString(R.string.tag_notification_title);
+                        String message = getString(R.string.tag_notification_message,
+                                currentUserEmail, note.getTitle());
 
-                        // Send to your Cloud Function
-                        db.collection("notifications")
-                                .add(notificationData)
-                                .addOnSuccessListener(documentReference -> Toast
-                                        .makeText(this, "Notification sent", Toast.LENGTH_SHORT).show())
-                                .addOnFailureListener(e -> Toast
-                                        .makeText(this, "Failed to send notification", Toast.LENGTH_SHORT).show());
+                        Log.d(TAG, "Sending notification to user: " + email + " with token: " + fcmToken);
+                        NotesFirebaseMessagingService.sendDirectNotification(
+                                this, fcmToken, title, message);
+
+                        Toast.makeText(this, "Notification sent to " + email,
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Log.e(TAG, "FCM token not found for user: " + email);
+                        Toast.makeText(this, "Could not send notification - user token not found",
+                                Toast.LENGTH_SHORT).show();
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting user FCM token: " + e.getMessage());
+                    Toast.makeText(this, "Error sending notification", Toast.LENGTH_SHORT).show();
                 });
     }
 }
