@@ -32,6 +32,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import androidx.appcompat.app.AlertDialog; // Add this import
+import com.example.notes.TaggedNotesFragment;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -209,6 +210,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NotesListFragment currentFragment = getCurrentFragment();
         if (currentFragment != null) {
             currentFragment.closeSearch();
+        }
+
+        if (id == R.id.nav_tagged_notes) {
+            // Replace current fragment with TaggedNotesFragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new TaggedNotesFragment())
+                    .addToBackStack(null)
+                    .commit();
+            setTitle(R.string.nav_tagged_notes);
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
         }
 
         if (id == R.id.nav_all_notes) {
