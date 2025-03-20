@@ -34,10 +34,9 @@ public class TaggedNotesFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new NoteAdapter(getContext(), new ArrayList<>());
         recyclerView.setAdapter(adapter);
-        
+
         // Set item click listener for the adapter
-        adapter.setOnItemClickListener(position -> {
-            Note note = adapter.getNoteAtPosition(position);
+        adapter.setOnItemClickListener(note -> {
             Intent intent = new Intent(getActivity(), NoteDetailActivity.class);
             intent.putExtra("noteId", note.getId());
             startActivity(intent);
@@ -70,9 +69,8 @@ public class TaggedNotesFragment extends Fragment {
                                         sharedNote.getTitle(),
                                         sharedNote.getContent(),
                                         sharedNote.getCategory(),
-                                        sharedNote.getTimestamp() != null ? 
-                                            sharedNote.getTimestamp().getTime() : 
-                                            System.currentTimeMillis(),
+                                        sharedNote.getTimestamp() != null ? sharedNote.getTimestamp().getTime()
+                                                : System.currentTimeMillis(),
                                         0);
                                 notes.add(note);
                             }
@@ -80,7 +78,7 @@ public class TaggedNotesFragment extends Fragment {
                     }
 
                     adapter.updateNotes(notes);
-                    
+
                     emptyView.setVisibility(notes.isEmpty() ? View.VISIBLE : View.GONE);
                     recyclerView.setVisibility(notes.isEmpty() ? View.GONE : View.VISIBLE);
                 });
