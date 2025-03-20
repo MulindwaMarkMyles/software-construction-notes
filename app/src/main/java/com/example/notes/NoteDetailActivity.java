@@ -49,6 +49,9 @@ public class NoteDetailActivity extends AppCompatActivity {
     private Menu menu;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
+    private AlertDialog userSearchDialog;
+    private UserSearchAdapter userSearchAdapter;
+    private RecyclerView userList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -347,10 +350,24 @@ public class NoteDetailActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = getLayoutInflater().inflate(R.layout.dialog_user_search, null);
         EditText searchInput = view.findViewById(R.id.search_input);
-        RecyclerView userList = view.findViewById(R.id.user_list);
+        userList = view.findViewById(R.id.user_list);
 
-        builder.setView(view);
-        AlertDialog dialog = builder.create();
+        // Set up RecyclerView
+        userList.setLayoutManager(new LinearLayoutManager(this));
+        userSearchAdapter = new UserSearchAdapter(user -> {
+            // Handle user selection
+            tagUser(user.getUserId(), user.getEmail());
+            // Insert mention without @ since it's already in the text
+            int cursorPosition = noteDetailsEditText.getSelectionStart();
+            String text = noteDetailsEditText.getText().toString();
+            text = text.substring(0, cursorPosition - 1) + user.getEmail() + " " + text.substring(cursorPosition);
+            noteDetailsEditText.setText(text);
+            noteDetailsEditText.setSelection(cursorPosition - 1 + user.getEmail().length() + 1);
+            if (userSearchDialog != null) {
+                userSearchDialog.dismiss();
+            }
+        });
+        userList.setAdapter(userSearchAdapter);
 
         // Search for users as user types
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -364,55 +381,45 @@ public class NoteDetailActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                searchUsers(s.toString(), userList);
+                searchUsers(s.toString());
             }
         });
 
-        dialog.show();
+        builder.setView(view);
+        userSearchDialog = builder.create();
+        userSearchDialog.show();
     }
 
-    private void searchUsers(String query, RecyclerView userList) {
-        // Set up RecyclerView
-        userList.setLayoutManager(new LinearLayoutManager(this));
-        AlertDialog dialog = (AlertDialog) userList.getParent().getParent();
-
-        UserSearchAdapter adapter = new UserSearchAdapter(user -> {
-            // Handle user selection
-            tagUser(user.getUserId(), user.getEmail());
-            // Insert mention without @ since it's already in the text
-            int cursorPosition = noteDetailsEditText.getSelectionStart();
-            String text = noteDetailsEditText.getText().toString();
-            // Remove the @ that triggered the dialog
-            text = text.substring(0, cursorPosition - 1) + user.getEmail() + " " + text.substring(cursorPosition);
-            noteDetailsEditText.setText(text);
-            noteDetailsEditText.setSelection(cursorPosition - 1 + user.getEmail().length() + 1);
-            dialog.dismiss();
-        });
-        userList.setAdapter(adapter);
+    private void searchUsers(String query) {
+        if (query.isEmpty()) {
+            userSearchAdapter.submitList(new ArrayList<>());
+            return;
+        }
 
         // Query Firestore for users
-        if (!query.isEmpty()) {
-            db.collection("users")
-                    .whereGreaterThanOrEqualTo("email", query)
-                    .whereLessThanOrEqualTo("email", query + '\uf8ff')
-                    .limit(10) // Limit results
-                    .get()
-                    .addOnSuccessListener(snapshot -> {
-                        List<UserTag> users = new ArrayList<>();
-                        for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                            // Don't show current user in results
-                            if (!doc.getId().equals(mAuth.getCurrentUser().getUid())) {
-                                users.add(new UserTag(
-                                        doc.getId(),
-                                        doc.getString("email"),
-                                        doc.getString("fcmToken")));
-                            }
+        db.collection("users")
+                .whereGreaterThanOrEqualTo("email", query)
+                .whereLessThanOrEqualTo("email", query + '\uf8ff')
+                .limit(10)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<UserTag> users = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        // Don't show current user in results
+                        if (!doc.getId().equals(mAuth.getCurrentUser().getUid())) {
+                            UserTag user = new UserTag(
+                                    doc.getId(),
+                                    doc.getString("email"),
+                                    doc.getString("fcmToken"));
+                            users.add(user);
                         }
-                        adapter.submitList(users);
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(this, "Error searching users: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show());
-        }
+                    }
+                    if (userSearchAdapter != null) {
+                        userSearchAdapter.submitList(users);
+                    }
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Error searching users: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
     }
 
     private void tagUser(String userId, String email) {
