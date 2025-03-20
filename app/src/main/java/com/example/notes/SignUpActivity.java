@@ -10,10 +10,12 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpActivity extends AppCompatActivity {
     private EditText emailInput, passwordInput, confirmPasswordInput;
@@ -57,26 +59,29 @@ public class SignUpActivity extends AppCompatActivity {
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        // Get FCM token and store in Firestore
                         FirebaseMessaging.getInstance().getToken()
                                 .addOnCompleteListener(tokenTask -> {
                                     if (tokenTask.isSuccessful()) {
                                         String token = tokenTask.getResult();
                                         String userId = mAuth.getCurrentUser().getUid();
 
-                                        // Store user data in Firestore
+                                        Map<String, Object> userData = new HashMap<>();
+                                        userData.put("email", email);
+                                        userData.put("fcmToken", token);
+                                        userData.put("createdAt", FieldValue.serverTimestamp());
+
                                         FirebaseFirestore.getInstance()
                                                 .collection("users")
                                                 .document(userId)
-                                                .set(new HashMap<String, Object>() {
-                                                    {
-                                                        put("email", email);
-                                                        put("fcmToken", token);
-                                                    }
-                                                });
+                                                .set(userData)
+                                                .addOnSuccessListener(aVoid -> {
+                                                    startActivity(new Intent(this, MainActivity.class));
+                                                    finish();
+                                                })
+                                                .addOnFailureListener(
+                                                        e -> Toast.makeText(this, "Error creating user profile",
+                                                                Toast.LENGTH_SHORT).show());
                                     }
-                                    startActivity(new Intent(this, MainActivity.class));
-                                    finish();
                                 });
                     } else {
                         Toast.makeText(this, "Sign up failed: " + task.getException().getMessage(),

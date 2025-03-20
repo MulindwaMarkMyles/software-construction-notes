@@ -14,7 +14,7 @@ import com.example.notes.R;
 import com.example.notes.model.UserTag;
 
 public class UserSearchAdapter extends ListAdapter<UserTag, UserSearchAdapter.UserViewHolder> {
-    
+
     private final OnUserSelectedListener listener;
 
     public interface OnUserSelectedListener {

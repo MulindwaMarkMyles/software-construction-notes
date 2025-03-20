@@ -22,10 +22,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.widget.EditText;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class NoteDetailActivity extends AppCompatActivity {
@@ -365,14 +368,44 @@ public class NoteDetailActivity extends AppCompatActivity {
     }
 
     private void searchUsers(String query, RecyclerView userList) {
-        db.collection("users")
-                .whereGreaterThanOrEqualTo("email", query)
-                .whereLessThanOrEqualTo("email", query + '\uf8ff')
-                .get()
-                .addOnSuccessListener(snapshot -> {
-                    // Show users in RecyclerView
-                    // When user is selected, add tag to note and send notification
-                });
+        // Set up RecyclerView
+        userList.setLayoutManager(new LinearLayoutManager(this));
+        UserSearchAdapter adapter = new UserSearchAdapter(user -> {
+            // Handle user selection
+            tagUser(user.getUserId(), user.getEmail());
+            // Insert @ mention in the note text
+            int cursorPosition = noteDetailsEditText.getSelectionStart();
+            String text = noteDetailsEditText.getText().toString();
+            String mention = "@" + user.getEmail() + " ";
+            noteDetailsEditText.setText(text.substring(0, cursorPosition) + mention +
+                    text.substring(cursorPosition));
+            noteDetailsEditText.setSelection(cursorPosition + mention.length());
+        });
+        userList.setAdapter(adapter);
+
+        // Query Firestore for users
+        if (!query.isEmpty()) {
+            db.collection("users")
+                    .whereGreaterThanOrEqualTo("email", query)
+                    .whereLessThanOrEqualTo("email", query + '\uf8ff')
+                    .limit(10) // Limit results
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        List<UserTag> users = new ArrayList<>();
+                        for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                            // Don't show current user in results
+                            if (!doc.getId().equals(mAuth.getCurrentUser().getUid())) {
+                                users.add(new UserTag(
+                                        doc.getId(),
+                                        doc.getString("email"),
+                                        doc.getString("fcmToken")));
+                            }
+                        }
+                        adapter.submitList(users);
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(this, "Error searching users: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show());
+        }
     }
 
     private void tagUser(String userId, String email) {
