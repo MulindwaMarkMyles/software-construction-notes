@@ -374,16 +374,19 @@ public class NoteDetailActivity extends AppCompatActivity {
     private void searchUsers(String query, RecyclerView userList) {
         // Set up RecyclerView
         userList.setLayoutManager(new LinearLayoutManager(this));
+        AlertDialog dialog = (AlertDialog) userList.getParent().getParent();
+
         UserSearchAdapter adapter = new UserSearchAdapter(user -> {
             // Handle user selection
             tagUser(user.getUserId(), user.getEmail());
-            // Insert @ mention in the note text
+            // Insert mention without @ since it's already in the text
             int cursorPosition = noteDetailsEditText.getSelectionStart();
             String text = noteDetailsEditText.getText().toString();
-            String mention = "@" + user.getEmail() + " ";
-            noteDetailsEditText.setText(text.substring(0, cursorPosition) + mention +
-                    text.substring(cursorPosition));
-            noteDetailsEditText.setSelection(cursorPosition + mention.length());
+            // Remove the @ that triggered the dialog
+            text = text.substring(0, cursorPosition - 1) + user.getEmail() + " " + text.substring(cursorPosition);
+            noteDetailsEditText.setText(text);
+            noteDetailsEditText.setSelection(cursorPosition - 1 + user.getEmail().length() + 1);
+            dialog.dismiss();
         });
         userList.setAdapter(adapter);
 
@@ -426,27 +429,27 @@ public class NoteDetailActivity extends AppCompatActivity {
                 .addOnSuccessListener(document -> {
                     String fcmToken = document.getString("fcmToken");
                     if (fcmToken != null) {
-                        // Send FCM notification
-                        sendFCMNotification(fcmToken, note.getTitle());
+                        // Send notification data
+                        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+                        Map<String, Object> notificationData = new HashMap<>();
+                        notificationData.put("to", fcmToken);
+                        notificationData.put("data", new HashMap<String, String>() {
+                            {
+                                put("title", getString(R.string.tag_notification_title));
+                                put("message", getString(R.string.tag_notification_message, currentUserEmail,
+                                        note.getTitle()));
+                                put("noteId", String.valueOf(note.getId()));
+                            }
+                        });
+
+                        // Send to your Cloud Function
+                        db.collection("notifications")
+                                .add(notificationData)
+                                .addOnSuccessListener(documentReference -> Toast
+                                        .makeText(this, "Notification sent", Toast.LENGTH_SHORT).show())
+                                .addOnFailureListener(e -> Toast
+                                        .makeText(this, "Failed to send notification", Toast.LENGTH_SHORT).show());
                     }
                 });
-    }
-
-    private void sendFCMNotification(String fcmToken, String noteTitle) {
-        // Prepare notification data
-        String currentUserEmail = mAuth.getCurrentUser().getEmail();
-        String notificationTitle = getString(R.string.tag_notification_title);
-        String notificationMessage = getString(R.string.tag_notification_message, currentUserEmail, noteTitle);
-
-        // Create notification data map
-        Map<String, Object> notificationData = new HashMap<>();
-        notificationData.put("token", fcmToken);
-        notificationData.put("title", notificationTitle);
-        notificationData.put("message", notificationMessage);
-        notificationData.put("timestamp", System.currentTimeMillis());
-
-        // Send to your Firebase Cloud Function or directly using FCM API
-        db.collection("notifications")
-                .add(notificationData);
     }
 }
