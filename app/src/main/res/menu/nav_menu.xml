@@ -30,7 +30,7 @@
     <group android:id="@+id/nav_group_shared">
         <item
             android:id="@+id/nav_tagged_notes"
-            android:icon="@drawable/ic_tag"
+            android:icon="@drawable/tag"
             android:title="@string/nav_tagged_notes" />
     </group>
 
