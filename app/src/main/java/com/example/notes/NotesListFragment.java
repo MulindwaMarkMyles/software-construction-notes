@@ -311,8 +311,20 @@ public class NotesListFragment extends Fragment {
                 if (showFavoritesOnly) {
                     notesList.addAll(databaseHelper.getFavoriteNotes());
                 } else if (currentCategory != null) {
-        } 
-        
+                    notesList.addAll(databaseHelper.getNotesByCategory(currentCategory));
+                } else {
+                    notesList.addAll(databaseHelper.getAllNotes());
+                }
+
+                if (adapter != null) {
+                    adapter.updateList(notesList);
+                    showEmptyStateIfNeeded(notesList);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error refreshing notes", e);
+            Toast.makeText(getContext(), "Error refreshing notes", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void filterNotes(String query) {
