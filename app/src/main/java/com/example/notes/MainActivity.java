@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     fragmentContainer.setVisibility(View.GONE);
                 }
             }
-            
+
             // Close any open search
             NotesListFragment currentFragment = getCurrentFragment();
             if (currentFragment != null) {
@@ -277,7 +277,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e("MainActivity", "Navigation error", e);
             Toast.makeText(this, "Navigation error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-        
+
         return false;
     }
 

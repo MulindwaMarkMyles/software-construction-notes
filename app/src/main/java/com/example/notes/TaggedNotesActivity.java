@@ -37,10 +37,10 @@ public class TaggedNotesActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         try {
             setContentView(R.layout.activity_tagged_notes);
-            
+
             // Initialize Firebase first
             db = FirebaseFirestore.getInstance();
             mAuth = FirebaseAuth.getInstance();
@@ -79,7 +79,7 @@ public class TaggedNotesActivity extends AppCompatActivity {
             loadTaggedNotes();
         } catch (Exception e) {
             Log.e(TAG, "Error in onCreate", e);
-            Toast.makeText(this, "Error initializing activity: " + e.getMessage(), 
+            Toast.makeText(this, "Error initializing activity: " + e.getMessage(),
                     Toast.LENGTH_SHORT).show();
             finish();
         }
@@ -159,7 +159,7 @@ public class TaggedNotesActivity extends AppCompatActivity {
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
                         Log.e(TAG, "Listen failed.", error);
-                        Toast.makeText(TaggedNotesActivity.this, 
+                        Toast.makeText(TaggedNotesActivity.this,
                                 "Error loading notes: " + error.getMessage(),
                                 Toast.LENGTH_SHORT).show();
                         return;
@@ -173,20 +173,19 @@ public class TaggedNotesActivity extends AppCompatActivity {
                                 if (sharedNote != null) {
                                     // Add safety check for potential null values
                                     String noteId = sharedNote.getNoteId();
-                                    if (noteId == null || noteId.isEmpty()) continue;
-                                    
+                                    if (noteId == null || noteId.isEmpty())
+                                        continue;
+
                                     try {
                                         Note note = new Note(
                                                 Integer.parseInt(noteId),
-                                                sharedNote.getAuthorEmail() != null ? 
-                                                        sharedNote.getAuthorEmail() : "Unknown",
-                                                sharedNote.getContent() != null ? 
-                                                        sharedNote.getContent() : "",
-                                                sharedNote.getCategory() != null ? 
-                                                        sharedNote.getCategory() : "Personal",
-                                                sharedNote.getTimestamp() != null ? 
-                                                        sharedNote.getTimestamp().getTime() : 
-                                                        System.currentTimeMillis(),
+                                                sharedNote.getAuthorEmail() != null ? sharedNote.getAuthorEmail()
+                                                        : "Unknown",
+                                                sharedNote.getContent() != null ? sharedNote.getContent() : "",
+                                                sharedNote.getCategory() != null ? sharedNote.getCategory()
+                                                        : "Personal",
+                                                sharedNote.getTimestamp() != null ? sharedNote.getTimestamp().getTime()
+                                                        : System.currentTimeMillis(),
                                                 0);
                                         allTaggedNotes.add(note);
                                     } catch (NumberFormatException e) {
@@ -205,8 +204,8 @@ public class TaggedNotesActivity extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error processing notes", e);
-                        Toast.makeText(TaggedNotesActivity.this, 
-                                "Error processing notes", 
+                        Toast.makeText(TaggedNotesActivity.this,
+                                "Error processing notes",
                                 Toast.LENGTH_SHORT).show();
                     }
                 });

@@ -47,18 +47,15 @@ public class TaggedNoteAdapter extends RecyclerView.Adapter<TaggedNoteAdapter.Ta
                 String[] parts = content.split("\n\n", 2);
                 String noteTitle = parts.length > 0 ? parts[0].trim() : "";
                 String noteContent = parts.length > 1 ? parts[1].trim() : content;
-                
+
                 // Set content with title and content properly formatted
-                holder.contentTextView.setText(noteTitle.isEmpty() ? 
-                        noteContent : 
-                        noteTitle + "\n\n" + noteContent);
+                holder.contentTextView.setText(noteTitle.isEmpty() ? noteContent : noteTitle + "\n\n" + noteContent);
             } else {
                 holder.contentTextView.setText("");
             }
 
             // Set category with null check
-            holder.categoryChip.setText(note.getCategory() != null ? 
-                    note.getCategory() : "Unknown");
+            holder.categoryChip.setText(note.getCategory() != null ? note.getCategory() : "Unknown");
 
             // Format and set date
             String dateStr = dateFormat.format(new Date(note.getTimestamp()));
