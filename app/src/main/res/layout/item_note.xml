@@ -17,6 +17,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
         
+        <!-- Modified title to have end constraint to tag icon -->
         <TextView
             android:id="@+id/note_title"
             android:layout_width="0dp"
@@ -29,19 +30,21 @@
             app:layout_constraintEnd_toStartOf="@id/tag_icon"
             tools:text="Meeting Notes" />
             
-        <!-- New Tag icon -->
+        <!-- Tag icon positioned to the left of the date -->
         <ImageView
             android:id="@+id/tag_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_tag"
             android:visibility="gone"
+            android:layout_marginEnd="8dp"
             android:contentDescription="@string/tagged_users"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/note_date"
             app:layout_constraintTop_toTopOf="@id/note_title"
             app:layout_constraintBottom_toBottomOf="@id/note_title"
             app:tint="@color/colorAccent" />
             
+        <!-- Date view remains at the far right -->
         <TextView
             android:id="@+id/note_date"
             android:layout_width="wrap_content"
@@ -52,6 +55,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Apr 12" />
             
+        <!-- Content takes full width below the title -->
         <TextView
             android:id="@+id/note_content_preview"
             android:layout_width="0dp"
@@ -65,6 +69,7 @@
             app:layout_constraintTop_toBottomOf="@id/note_title"
             tools:text="This is a preview of the note content that will be displayed in the card." />
             
+        <!-- Rest remains unchanged -->
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/note_tags"
             android:layout_width="0dp"
