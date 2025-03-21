@@ -99,7 +99,7 @@ public class DriveActivity extends AppCompatActivity {
         // Initialize Google Sign In with proper scopes for Drive API
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestIdToken(getString(R.string.default_web_client_id))  // Add ID token request
+                .requestIdToken(getString(R.string.default_web_client_id)) // Add ID token request
                 .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
                 .build();
         signInClient = GoogleSignIn.getClient(this, signInOptions);
@@ -176,11 +176,11 @@ public class DriveActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            
+
             // Log success information for debugging
             Log.d(TAG, "Sign in successful: " + account.getEmail());
             Log.d(TAG, "ID Token: " + (account.getIdToken() != null ? "Present" : "Missing"));
-            
+
             // Signed in successfully
             driveServiceHelper = new DriveServiceHelper(this, account); // Pass context and account
             updateUI(true);
@@ -193,7 +193,7 @@ public class DriveActivity extends AppCompatActivity {
         } catch (ApiException e) {
             // Handle sign-in failure with detailed logging
             Log.e(TAG, "signInResult:failed code=" + e.getStatusCode(), e);
-            
+
             // Show more descriptive error message based on error code
             String errorMessage;
             switch (e.getStatusCode()) {
@@ -210,7 +210,7 @@ public class DriveActivity extends AppCompatActivity {
                     errorMessage = "Sign in failed: " + e.getStatusCode();
                     break;
             }
-            
+
             updateUI(false);
             Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
         }

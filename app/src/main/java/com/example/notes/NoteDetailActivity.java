@@ -568,7 +568,7 @@ public class NoteDetailActivity extends AppCompatActivity {
             // Convert note to text content
             String noteContent = note.getTitle() + "\n\n" + note.getContent();
             String fileName = note.getTitle() + ".txt";
-            
+
             Log.d(TAG, "Uploading note: " + fileName);
 
             // Upload to Drive
@@ -581,7 +581,7 @@ public class NoteDetailActivity extends AppCompatActivity {
                     .addOnFailureListener(exception -> {
                         progressDialog.dismiss();
                         Log.e(TAG, "Couldn't create file", exception);
-                        Toast.makeText(this, R.string.drive_upload_failed + ": " + exception.getMessage(), 
+                        Toast.makeText(this, R.string.drive_upload_failed + ": " + exception.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     });
         }
