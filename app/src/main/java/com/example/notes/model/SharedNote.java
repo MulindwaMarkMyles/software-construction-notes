@@ -11,6 +11,7 @@ public class SharedNote {
     private String ownerUserId;
     private String ownerEmail;
     private String taggedUserId;
+    private String authorEmail; // Add this field
 
     @ServerTimestamp
     private Date timestamp;
@@ -20,7 +21,7 @@ public class SharedNote {
     } // Required for Firestore
 
     public SharedNote(String noteId, String title, String content, String category,
-            String ownerUserId, String ownerEmail, String taggedUserId) {
+            String ownerUserId, String ownerEmail, String taggedUserId, String authorEmail) {
         this.noteId = noteId;
         this.title = title;
         this.content = content;
@@ -28,6 +29,7 @@ public class SharedNote {
         this.ownerUserId = ownerUserId;
         this.ownerEmail = ownerEmail;
         this.taggedUserId = taggedUserId;
+        this.authorEmail = authorEmail;
     }
 
     // Add getters and setters
@@ -85,6 +87,14 @@ public class SharedNote {
 
     public void setTaggedUserId(String taggedUserId) {
         this.taggedUserId = taggedUserId;
+    }
+
+    public String getAuthorEmail() {
+        return authorEmail;
+    }
+
+    public void setAuthorEmail(String authorEmail) {
+        this.authorEmail = authorEmail;
     }
 
     public Date getTimestamp() {

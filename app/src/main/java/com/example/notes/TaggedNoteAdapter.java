@@ -36,7 +36,7 @@ public class TaggedNoteAdapter extends RecyclerView.Adapter<TaggedNoteAdapter.Ta
     public void onBindViewHolder(@NonNull TaggedNoteViewHolder holder, int position) {
         Note note = notes.get(position);
 
-        holder.fromTextView.setText("From: " + note.getTitle());
+        holder.fromTextView.setText("From: " + note.getTitle()); // note.getTitle() now contains the author email
         holder.contentTextView.setText(note.getContent());
         holder.categoryChip.setText(note.getCategory());
 

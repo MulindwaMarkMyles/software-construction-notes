@@ -139,7 +139,7 @@ public class TaggedNotesActivity extends AppCompatActivity {
                             if (sharedNote != null) {
                                 Note note = new Note(
                                         Integer.parseInt(sharedNote.getNoteId()),
-                                        sharedNote.getTitle(),
+                                        sharedNote.getAuthorEmail(), // Use author email instead of title
                                         sharedNote.getContent(),
                                         sharedNote.getCategory(),
                                         sharedNote.getTimestamp() != null ? sharedNote.getTimestamp().getTime()
