@@ -5,16 +5,12 @@ public class UserTag {
     private String email;
     private String fcmToken;
 
-    public UserTag() {
-    }
-
     public UserTag(String userId, String email, String fcmToken) {
         this.userId = userId;
         this.email = email;
         this.fcmToken = fcmToken;
     }
 
-    // Getters and setters
     public String getUserId() {
         return userId;
     }

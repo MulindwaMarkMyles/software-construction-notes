@@ -4,59 +4,63 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.notes.R;
 import com.example.notes.model.UserTag;
 
-public class UserSearchAdapter extends ListAdapter<UserTag, UserSearchAdapter.UserViewHolder> {
+public class UserSearchAdapter extends ListAdapter<UserTag, UserSearchAdapter.ViewHolder> {
+    
+    private final OnUserClickListener listener;
 
-    private final OnUserSelectedListener listener;
-
-    public interface OnUserSelectedListener {
-        void onUserSelected(UserTag user);
+    public interface OnUserClickListener {
+        void onUserClick(UserTag user);
     }
 
-    public UserSearchAdapter(OnUserSelectedListener listener) {
-        super(new DiffUtil.ItemCallback<UserTag>() {
-            @Override
-            public boolean areItemsTheSame(@NonNull UserTag oldItem, @NonNull UserTag newItem) {
-                return oldItem.getUserId().equals(newItem.getUserId());
-            }
-
-            @Override
-            public boolean areContentsTheSame(@NonNull UserTag oldItem, @NonNull UserTag newItem) {
-                return oldItem.getEmail().equals(newItem.getEmail());
-            }
-        });
+    public UserSearchAdapter(OnUserClickListener listener) {
+        super(new UserDiffCallback());
         this.listener = listener;
     }
 
     @NonNull
     @Override
-    public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_user_search, parent, false);
-        return new UserViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         UserTag user = getItem(position);
-        holder.emailText.setText(user.getEmail());
-        holder.itemView.setOnClickListener(v -> listener.onUserSelected(user));
+        holder.bind(user, listener);
     }
 
-    static class UserViewHolder extends RecyclerView.ViewHolder {
-        TextView emailText;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        private final TextView emailView;
 
-        UserViewHolder(View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            emailText = itemView.findViewById(R.id.email_text);
+            emailView = itemView.findViewById(R.id.user_email);
+        }
+
+        public void bind(final UserTag user, final OnUserClickListener listener) {
+            emailView.setText(user.getEmail());
+            itemView.setOnClickListener(v -> listener.onUserClick(user));
+        }
+    }
+
+    static class UserDiffCallback extends DiffUtil.ItemCallback<UserTag> {
+        @Override
+        public boolean areItemsTheSame(@NonNull UserTag oldItem, @NonNull UserTag newItem) {
+            return oldItem.getUserId().equals(newItem.getUserId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull UserTag oldItem, @NonNull UserTag newItem) {
+            return oldItem.getEmail().equals(newItem.getEmail());
         }
     }
 }

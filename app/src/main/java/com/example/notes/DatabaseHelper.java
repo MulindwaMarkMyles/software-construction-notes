@@ -19,6 +19,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Table Names
     private static final String TABLE_NOTES = "notes";
     private static final String TABLE_TAGS = "note_tags";
+    private static final String TABLE_NOTE_TAGS = "note_tags"; // Use the same name as TABLE_TAGS
 
     // Note Table Columns
     private static final String KEY_NOTE_ID = "id";
@@ -636,9 +637,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean noteHasTags(int noteId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(
-                TABLE_NOTE_TAGS,
+                TABLE_TAGS,  // Use TABLE_TAGS instead of TABLE_NOTE_TAGS
                 new String[] { "COUNT(*)" },
-                KEY_NOTE_ID + " = ?",
+                KEY_TAG_NOTE_ID + " = ?",
                 new String[] { String.valueOf(noteId) },
                 null, null, null);
 

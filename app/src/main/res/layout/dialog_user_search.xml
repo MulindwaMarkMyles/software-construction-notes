@@ -9,13 +9,14 @@
         android:id="@+id/search_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search users"
+        android:hint="Search users by email"
         android:inputType="textEmailAddress" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/user_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:layout_height="300dp"
+        android:layout_marginTop="16dp"
+        android:scrollbars="vertical" />
 
 </LinearLayout>
