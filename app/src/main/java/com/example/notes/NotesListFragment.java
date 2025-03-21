@@ -24,6 +24,11 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.notes.adapter.UserSearchAdapter;
+import com.example.notes.model.UserTag;
+import com.example.notes.model.SharedNote;
+import com.example.notes.service.NotesFirebaseMessagingService;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -33,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotesListFragment extends Fragment {
+
+    private static final String TAG = "NotesListFragment";
 
     private RecyclerView notesRecyclerView;
     private LinearLayout emptyState;
@@ -96,32 +103,43 @@ public class NotesListFragment extends Fragment {
         updateAdapterTheme();
 
         // Add click listener to open note detail
+        adapter.setOnItemClickListener(note -> {
+            // Open note detail with this note
+            Intent intent = new Intent(getContext(), NoteDetailActivity.class);
+            intent.putExtra("noteId", (long) note.getId());
+            startActivity(intent);
+        });
+
+        // Add long click listener for tagging
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Note note) {
-                // Open note detail with this note
                 Intent intent = new Intent(getContext(), NoteDetailActivity.class);
-                intent.putExtra("noteId", (long) note.getId());
+                intent.putExtra("noteId", note.getId());
                 startActivity(intent);
             }
         });
 
-        // Add long click listener for tagging
-        adapter.setOnNoteLongClickListener((note, view1) -> {
-            // Show options menu with tag option
-            PopupMenu popup = new PopupMenu(getContext(), view1);
-            popup.getMenuInflater().inflate(R.menu.note_context_menu, popup.getMenu());
+        // Show context menu on long press
+        adapter.setOnItemLongClickListener(new NoteAdapter.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(Note note, View view) {
+                // Show options menu with tag option
+                PopupMenu popup = new PopupMenu(getContext(), view);
+                popup.getMenuInflater().inflate(R.menu.note_context_menu, popup.getMenu());
 
-            // Handle menu item clicks
-            popup.setOnMenuItemClickListener(item -> {
-                if (item.getItemId() == R.id.action_tag_user) {
-                    showTagUserDialog(note);
-                    return true;
-                }
-                return false;
-            });
+                // Handle menu item clicks
+                popup.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == R.id.action_tag_user) {
+                        showTagUserDialog(note);
+                        return true;
+                    }
+                    return false;
+                });
 
-            popup.show();
+                popup.show();
+                return true;
+            }
         });
     }
 
@@ -293,25 +311,8 @@ public class NotesListFragment extends Fragment {
                 if (showFavoritesOnly) {
                     notesList.addAll(databaseHelper.getFavoriteNotes());
                 } else if (currentCategory != null) {
-                    notesList.addAll(databaseHelper.getNotesByCategory(currentCategory));
-                } else {
-                    notesList.addAll(databaseHelper.getAllNotes());
-                }
-
-                if (notesList.isEmpty() && currentCategory == null && !showFavoritesOnly) {
-                    addSampleNotes();
-                }
-
-                if (adapter != null) {
-                    adapter.updateList(notesList);
-                    showEmptyStateIfNeeded(notesList);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            // Show empty state
-            showEmptyStateIfNeeded(new ArrayList<>());
-        }
+        } 
+        
     }
 
     private void filterNotes(String query) {

@@ -25,17 +25,20 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     private final Context context;
     private List<Note> notesList;
-    private OnItemClickListener listener;
+    private OnItemClickListener clickListener;
+    private OnItemLongClickListener longClickListener;
     private boolean isDarkTheme = false;
     private DatabaseHelper dbHelper;
     private Set<Integer> notesWithTags; // Track notes that have tags
 
+    // Interface for click listener
     public interface OnItemClickListener {
         void onItemClick(Note note);
     }
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        this.listener = listener;
+    // Interface for long click listener
+    public interface OnItemLongClickListener {
+        boolean onItemLongClick(Note note, View view);
     }
 
     public NoteAdapter(Context context, List<Note> notesList) {
@@ -44,6 +47,14 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         this.dbHelper = DatabaseHelper.getInstance(context);
         this.notesWithTags = new HashSet<>();
         updateNotesWithTags();
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.clickListener = listener;
+    }
+
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        this.longClickListener = listener;
     }
 
     public void updateList(List<Note> newList) {
@@ -127,16 +138,15 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
         // Set up click listener
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onItemClick(note);
+            if (clickListener != null) {
+                clickListener.onItemClick(note);
             }
         });
 
         // Set up long click listener
         holder.itemView.setOnLongClickListener(v -> {
-            if (listener != null) {
-                listener.onItemClick(note);
-                return true;
+            if (longClickListener != null) {
+                return longClickListener.onItemLongClick(note, v);
             }
             return false;
         });
@@ -233,8 +243,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                 @Override
                 public void onClick(View v) {
                     int position = getAdapterPosition();
-                    if (listener != null && position != RecyclerView.NO_POSITION) {
-                        listener.onItemClick(notesList.get(position));
+                    if (clickListener != null && position != RecyclerView.NO_POSITION) {
+                        clickListener.onItemClick(notesList.get(position));
                     }
                 }
             });
@@ -243,9 +253,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                 @Override
                 public boolean onLongClick(View v) {
                     int position = getAdapterPosition();
-                    if (listener != null && position != RecyclerView.NO_POSITION) {
-                        listener.onItemClick(notesList.get(position));
-                        return true;
+                    if (longClickListener != null && position != RecyclerView.NO_POSITION) {
+                        return longClickListener.onItemLongClick(notesList.get(position), v);
                     }
                     return false;
                 }

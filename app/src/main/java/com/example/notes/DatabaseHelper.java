@@ -637,7 +637,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean noteHasTags(int noteId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(
-                TABLE_TAGS,  // Use TABLE_TAGS instead of TABLE_NOTE_TAGS
+                TABLE_TAGS, // Use TABLE_TAGS instead of TABLE_NOTE_TAGS
                 new String[] { "COUNT(*)" },
                 KEY_TAG_NOTE_ID + " = ?",
                 new String[] { String.valueOf(noteId) },
