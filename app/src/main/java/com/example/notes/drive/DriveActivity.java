@@ -99,7 +99,6 @@ public class DriveActivity extends AppCompatActivity {
         // Initialize Google Sign In with proper scopes for Drive API
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestIdToken(getString(R.string.default_web_client_id)) // Add ID token request
                 .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
                 .build();
         signInClient = GoogleSignIn.getClient(this, signInOptions);
@@ -179,10 +178,9 @@ public class DriveActivity extends AppCompatActivity {
 
             // Log success information for debugging
             Log.d(TAG, "Sign in successful: " + account.getEmail());
-            Log.d(TAG, "ID Token: " + (account.getIdToken() != null ? "Present" : "Missing"));
 
             // Signed in successfully
-            driveServiceHelper = new DriveServiceHelper(this, account); // Pass context and account
+            driveServiceHelper = new DriveServiceHelper(this, account);
             updateUI(true);
             loadDriveFiles();
 
@@ -191,19 +189,21 @@ public class DriveActivity extends AppCompatActivity {
                 uploadButton.setVisibility(View.VISIBLE);
             }
         } catch (ApiException e) {
-            // Handle sign-in failure with detailed logging
+            // More detailed error handling for code 10
             Log.e(TAG, "signInResult:failed code=" + e.getStatusCode(), e);
 
-            // Show more descriptive error message based on error code
             String errorMessage;
             switch (e.getStatusCode()) {
-                case 12500: // Sign in canceled by user
+                case 10:
+                    errorMessage = "Developer error: Check your OAuth client ID and SHA-1 certificate fingerprint in Firebase console";
+                    break;
+                case 12500:
                     errorMessage = "Sign in canceled";
                     break;
-                case 12501: // Sign in canceled due to one-tap timeout
+                case 12501:
                     errorMessage = "Sign in process timed out";
                     break;
-                case 7: // Network error
+                case 7:
                     errorMessage = "Network error, check your connection";
                     break;
                 default:
