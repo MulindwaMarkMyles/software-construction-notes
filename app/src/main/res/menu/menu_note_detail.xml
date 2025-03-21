@@ -13,4 +13,10 @@
         android:icon="@drawable/ic_favorite_border"
         android:title="@string/favorite"
         app:showAsAction="always" />
+    
+    <item
+        android:id="@+id/action_upload_drive"
+        android:icon="@drawable/ic_drive"
+        android:title="@string/upload_to_drive"
+        app:showAsAction="never" />
 </menu>

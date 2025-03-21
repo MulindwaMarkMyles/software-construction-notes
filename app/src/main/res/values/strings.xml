@@ -126,4 +126,27 @@
     <string name="notification_permission_message">This app needs notification permission to alert you when you\'re tagged in notes.</string>
     <string name="notification_permission_granted">Notification permission granted</string>
     <string name="notification_permission_denied">Notification permission denied</string>
+    
+    <!-- Google Drive Integration -->
+    <string name="drive_sync">Google Drive Sync</string>
+    <string name="upload_to_drive">Upload to Google Drive</string>
+    <string name="upload_note">Upload Note</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_to_drive">Sign in to Google Drive to upload and manage your notes</string>
+    <string name="signed_in_as">Signed in as %s</string>
+    <string name="signed_out">Not signed in</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="your_drive_files">Your Drive Files</string>
+    <string name="text_document">Text Document</string>
+    <string name="folder">Folder</string>
+    <string name="loading_drive_files">Loading Drive files…</string>
+    <string name="error_loading_files">Error loading files</string>
+    <string name="uploading_to_drive">Uploading to Drive…</string>
+    <string name="note_uploaded_to_drive">Note uploaded to Drive</string>
+    <string name="drive_upload_failed">Failed to upload to Drive</string>
+    <string name="save_note_first">Please save the note first</string>
+    <string name="note_not_found">Note not found</string>
+    <string name="sign_in_required">Sign in required</string>
+    <string name="no_note_selected">No note selected</string>
+    <string name="sign_in_failed">Sign in failed</string>
 </resources>

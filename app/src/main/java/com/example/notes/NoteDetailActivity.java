@@ -37,6 +37,10 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import android.util.Log;
 import com.example.notes.service.NotesFirebaseMessagingService;
 import com.example.notes.model.SharedNote;
+import com.example.notes.drive.DriveServiceHelper;
+import com.example.notes.drive.DriveActivity;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 public class NoteDetailActivity extends AppCompatActivity {
 
@@ -56,6 +60,7 @@ public class NoteDetailActivity extends AppCompatActivity {
     private AlertDialog userSearchDialog;
     private UserSearchAdapter userSearchAdapter;
     private RecyclerView userList;
+    private DriveServiceHelper driveServiceHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,6 +160,9 @@ public class NoteDetailActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
+
+        // Set up Google Drive integration
+        setupDriveIntegration();
     }
 
     private void setupCategoryChips() {
@@ -329,6 +337,10 @@ public class NoteDetailActivity extends AppCompatActivity {
         }
         if (item.getItemId() == R.id.action_favorite) {
             toggleFavorite();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_upload_drive) {
+            uploadNoteToDrive();
             return true;
         }
         if (item.getItemId() == android.R.id.home) {
@@ -512,5 +524,56 @@ public class NoteDetailActivity extends AppCompatActivity {
                     Log.e(TAG, "Error getting user FCM token: " + e.getMessage());
                     Toast.makeText(this, "Error sending notification", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void setupDriveIntegration() {
+        // Check if user is signed in to Google
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
+            driveServiceHelper = new DriveServiceHelper(this, account);
+        }
+    }
+
+    private void uploadNoteToDrive() {
+        if (note == null) {
+            Toast.makeText(this, R.string.save_note_first, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account == null) {
+            // User is not signed in to Google, launch DriveActivity for authentication
+            Intent intent = new Intent(this, DriveActivity.class);
+            intent.putExtra("noteId", note.getId());
+            startActivity(intent);
+        } else {
+            // User is already signed in, use DriveServiceHelper
+            if (driveServiceHelper == null) {
+                driveServiceHelper = new DriveServiceHelper(this, account);
+            }
+
+            // Show progress dialog
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage(getString(R.string.uploading_to_drive));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            // Convert note to text content
+            String noteContent = note.getTitle() + "\n\n" + note.getContent();
+            String fileName = note.getTitle() + ".txt";
+
+            // Upload to Drive
+            driveServiceHelper.createFile(fileName, noteContent)
+                    .addOnSuccessListener(fileId -> {
+                        progressDialog.dismiss();
+                        Toast.makeText(this, R.string.note_uploaded_to_drive, Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(exception -> {
+                        progressDialog.dismiss();
+                        Log.e(TAG, "Couldn't create file", exception);
+                        Toast.makeText(this, R.string.drive_upload_failed, Toast.LENGTH_SHORT).show();
+                    });
+        }
     }
 }

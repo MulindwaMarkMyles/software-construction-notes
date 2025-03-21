@@ -267,6 +267,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(this, "Error signing out", Toast.LENGTH_SHORT).show();
                 }
                 return true;
+            } else if (id == R.id.nav_drive_sync) {
+                Intent intent = new Intent(this, DriveActivity.class);
+                startActivity(intent);
             }
 
             // Keep selected item highlighted
