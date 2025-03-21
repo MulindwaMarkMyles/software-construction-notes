@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -206,68 +207,78 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.nav_tagged_notes) {
-            // Start TaggedNotesActivity instead of loading fragment
-            Intent intent = new Intent(this, TaggedNotesActivity.class);
-            startActivity(intent);
+        try {
+            if (id == R.id.nav_tagged_notes) {
+                // Start TaggedNotesActivity with error handling
+                Intent intent = new Intent(this, TaggedNotesActivity.class);
+                startActivity(intent);
+                drawerLayout.closeDrawer(GravityCompat.START);
+                return true;
+            } else {
+                // For other menu items, show ViewPager and hide fragment container
+                viewPager.setVisibility(View.VISIBLE);
+                View fragmentContainer = findViewById(R.id.fragment_container);
+                if (fragmentContainer != null) {
+                    fragmentContainer.setVisibility(View.GONE);
+                }
+            }
+            
+            // Close any open search
+            NotesListFragment currentFragment = getCurrentFragment();
+            if (currentFragment != null) {
+                currentFragment.closeSearch();
+            }
+
+            if (id == R.id.nav_all_notes) {
+                currentFragment.filterByCategory(null);
+                setTitle(R.string.app_name);
+            } else if (id == R.id.nav_favorites) {
+                currentFragment.filterFavorites();
+                setTitle(R.string.nav_favorites);
+            } else if (id == R.id.nav_personal) {
+                currentFragment.filterByCategory("Personal");
+                setTitle(R.string.category_personal);
+            } else if (id == R.id.nav_work) {
+                currentFragment.filterByCategory("Work");
+                setTitle(R.string.category_work);
+            } else if (id == R.id.nav_study) {
+                currentFragment.filterByCategory("Study");
+                setTitle(R.string.category_study);
+            } else if (id == R.id.nav_misc) {
+                currentFragment.filterByCategory("Miscellaneous");
+                setTitle(R.string.category_misc);
+            } else if (id == R.id.nav_settings) {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+            } else if (id == R.id.nav_trash) {
+                Intent intent = new Intent(this, TrashActivity.class);
+                startActivity(intent);
+            } else if (id == R.id.nav_sign_out) {
+                try {
+                    // Clear database before signing out
+                    DatabaseHelper.getInstance(this).clearDatabase();
+                    // Sign out from Firebase
+                    mAuth.signOut();
+                    startActivity(new Intent(this, SignInActivity.class)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                    finish();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Error signing out", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+
+            // Keep selected item highlighted
+            navigationView.setCheckedItem(id);
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
-        } else {
-            // For other menu items, show ViewPager and hide fragment container
-            viewPager.setVisibility(View.VISIBLE);
-            findViewById(R.id.fragment_container).setVisibility(View.GONE);
+        } catch (Exception e) {
+            Log.e("MainActivity", "Navigation error", e);
+            Toast.makeText(this, "Navigation error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-
-        // Close any open search
-        NotesListFragment currentFragment = getCurrentFragment();
-        if (currentFragment != null) {
-            currentFragment.closeSearch();
-        }
-
-        if (id == R.id.nav_all_notes) {
-            currentFragment.filterByCategory(null);
-            setTitle(R.string.app_name);
-        } else if (id == R.id.nav_favorites) {
-            currentFragment.filterFavorites();
-            setTitle(R.string.nav_favorites);
-        } else if (id == R.id.nav_personal) {
-            currentFragment.filterByCategory("Personal");
-            setTitle(R.string.category_personal);
-        } else if (id == R.id.nav_work) {
-            currentFragment.filterByCategory("Work");
-            setTitle(R.string.category_work);
-        } else if (id == R.id.nav_study) {
-            currentFragment.filterByCategory("Study");
-            setTitle(R.string.category_study);
-        } else if (id == R.id.nav_misc) {
-            currentFragment.filterByCategory("Miscellaneous");
-            setTitle(R.string.category_misc);
-        } else if (id == R.id.nav_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-        } else if (id == R.id.nav_trash) {
-            Intent intent = new Intent(this, TrashActivity.class);
-            startActivity(intent);
-        } else if (id == R.id.nav_sign_out) {
-            try {
-                // Clear database before signing out
-                DatabaseHelper.getInstance(this).clearDatabase();
-                // Sign out from Firebase
-                mAuth.signOut();
-                startActivity(new Intent(this, SignInActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
-                finish();
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Error signing out", Toast.LENGTH_SHORT).show();
-            }
-            return true;
-        }
-
-        // Keep selected item highlighted
-        navigationView.setCheckedItem(id);
-        drawerLayout.closeDrawer(GravityCompat.START);
-        return true;
+        
+        return false;
     }
 
     private NotesListFragment getCurrentFragment() {

@@ -3,6 +3,7 @@ package com.example.notes;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
@@ -36,48 +37,70 @@ public class TaggedNotesActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tagged_notes);
+        
+        try {
+            setContentView(R.layout.activity_tagged_notes);
+            
+            // Initialize Firebase first
+            db = FirebaseFirestore.getInstance();
+            mAuth = FirebaseAuth.getInstance();
 
-        // Setup toolbar with back navigation
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            // Setup toolbar with back navigation
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                setSupportActionBar(toolbar);
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                    getSupportActionBar().setDisplayShowHomeEnabled(true);
+                }
+                toolbar.setNavigationOnClickListener(v -> onBackPressed());
+            }
+
+            // Initialize views
+            recyclerView = findViewById(R.id.notes_recycler_view);
+            emptyState = findViewById(R.id.empty_state);
+            searchView = findViewById(R.id.search_view);
+
+            if (recyclerView == null || emptyState == null || searchView == null) {
+                Toast.makeText(this, "Error initializing views", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+
+            // Setup RecyclerView
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            adapter = new TaggedNoteAdapter(new ArrayList<>());
+            recyclerView.setAdapter(adapter);
+
+            // Setup search functionality
+            setupSearchView();
+
+            // Load notes
+            loadTaggedNotes();
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onCreate", e);
+            Toast.makeText(this, "Error initializing activity: " + e.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+            finish();
         }
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+    }
 
-        // Initialize views
-        recyclerView = findViewById(R.id.notes_recycler_view);
-        emptyState = findViewById(R.id.empty_state);
-        searchView = findViewById(R.id.search_view);
+    private void setupSearchView() {
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    filterNotes(query);
+                    return true;
+                }
 
-        // Setup RecyclerView
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new TaggedNoteAdapter(new ArrayList<>());
-        recyclerView.setAdapter(adapter);
-
-        // Setup search functionality
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                filterNotes(query);
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                filterNotes(newText);
-                return true;
-            }
-        });
-
-        // Initialize Firebase
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-
-        // Load notes
-        loadTaggedNotes();
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    filterNotes(newText);
+                    return true;
+                }
+            });
+        }
     }
 
     @Override
@@ -123,39 +146,68 @@ public class TaggedNotesActivity extends AppCompatActivity {
     }
 
     private void loadTaggedNotes() {
+        if (mAuth.getCurrentUser() == null) {
+            Log.e(TAG, "User not authenticated");
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         String currentUserId = mAuth.getCurrentUser().getUid();
         db.collection("shared_notes")
                 .whereEqualTo("taggedUserId", currentUserId)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
                         Log.e(TAG, "Listen failed.", error);
+                        Toast.makeText(TaggedNotesActivity.this, 
+                                "Error loading notes: " + error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
                         return;
                     }
 
                     allTaggedNotes.clear();
-                    if (value != null && !value.isEmpty()) {
-                        for (DocumentSnapshot doc : value.getDocuments()) {
-                            SharedNote sharedNote = doc.toObject(SharedNote.class);
-                            if (sharedNote != null) {
-                                Note note = new Note(
-                                        Integer.parseInt(sharedNote.getNoteId()),
-                                        sharedNote.getAuthorEmail(), // Use author email instead of title
-                                        sharedNote.getContent(),
-                                        sharedNote.getCategory(),
-                                        sharedNote.getTimestamp() != null ? sharedNote.getTimestamp().getTime()
-                                                : System.currentTimeMillis(),
-                                        0);
-                                allTaggedNotes.add(note);
+                    try {
+                        if (value != null && !value.isEmpty()) {
+                            for (DocumentSnapshot doc : value.getDocuments()) {
+                                SharedNote sharedNote = doc.toObject(SharedNote.class);
+                                if (sharedNote != null) {
+                                    // Add safety check for potential null values
+                                    String noteId = sharedNote.getNoteId();
+                                    if (noteId == null || noteId.isEmpty()) continue;
+                                    
+                                    try {
+                                        Note note = new Note(
+                                                Integer.parseInt(noteId),
+                                                sharedNote.getAuthorEmail() != null ? 
+                                                        sharedNote.getAuthorEmail() : "Unknown",
+                                                sharedNote.getContent() != null ? 
+                                                        sharedNote.getContent() : "",
+                                                sharedNote.getCategory() != null ? 
+                                                        sharedNote.getCategory() : "Personal",
+                                                sharedNote.getTimestamp() != null ? 
+                                                        sharedNote.getTimestamp().getTime() : 
+                                                        System.currentTimeMillis(),
+                                                0);
+                                        allTaggedNotes.add(note);
+                                    } catch (NumberFormatException e) {
+                                        Log.e(TAG, "Error parsing note ID", e);
+                                    }
+                                }
                             }
                         }
-                    }
 
-                    // Apply existing filter if any
-                    if (searchView != null && searchView.getQuery().length() > 0) {
-                        filterNotes(searchView.getQuery().toString());
-                    } else {
-                        adapter.updateNotes(allTaggedNotes);
-                        updateEmptyState(allTaggedNotes.isEmpty());
+                        // Apply existing filter if any
+                        if (searchView != null && searchView.getQuery().length() > 0) {
+                            filterNotes(searchView.getQuery().toString());
+                        } else {
+                            adapter.updateNotes(allTaggedNotes);
+                            updateEmptyState(allTaggedNotes.isEmpty());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing notes", e);
+                        Toast.makeText(TaggedNotesActivity.this, 
+                                "Error processing notes", 
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
     }

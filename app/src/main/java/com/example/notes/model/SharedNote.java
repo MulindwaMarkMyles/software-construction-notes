@@ -1,6 +1,6 @@
 package com.example.notes.model;
 
-import com.google.firebase.firestore.ServerTimestamp;
+import com.google.firebase.Timestamp;
 import java.util.Date;
 
 public class SharedNote {
@@ -11,15 +11,24 @@ public class SharedNote {
     private String ownerUserId;
     private String ownerEmail;
     private String taggedUserId;
-    private String authorEmail; // Add this field
-
-    @ServerTimestamp
+    private String authorEmail;
     private Date timestamp;
 
-    // Add constructors, getters, and setters
+    // Default constructor required for Firestore
     public SharedNote() {
-    } // Required for Firestore
+        // Initialize with default values to prevent null issues
+        this.noteId = "";
+        this.title = "";
+        this.content = "";
+        this.category = "";
+        this.ownerUserId = "";
+        this.ownerEmail = "";
+        this.taggedUserId = "";
+        this.authorEmail = "";
+        this.timestamp = new Date();
+    }
 
+    // Full constructor
     public SharedNote(String noteId, String title, String content, String category,
             String ownerUserId, String ownerEmail, String taggedUserId, String authorEmail) {
         this.noteId = noteId;
@@ -30,9 +39,10 @@ public class SharedNote {
         this.ownerEmail = ownerEmail;
         this.taggedUserId = taggedUserId;
         this.authorEmail = authorEmail;
+        this.timestamp = new Date();
     }
 
-    // Add getters and setters
+    // Getters and setters
     public String getNoteId() {
         return noteId;
     }

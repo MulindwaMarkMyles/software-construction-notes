@@ -34,31 +34,38 @@ public class TaggedNoteAdapter extends RecyclerView.Adapter<TaggedNoteAdapter.Ta
 
     @Override
     public void onBindViewHolder(@NonNull TaggedNoteViewHolder holder, int position) {
-        Note note = notes.get(position);
+        try {
+            Note note = notes.get(position);
 
-        // Use note.getTitle() which now contains the author email
-        holder.fromTextView.setText("From: " + note.getTitle());
+            // Use note.getTitle() which now contains the author email
+            holder.fromTextView.setText("From: " + note.getTitle());
 
-        // Show note content (title + content)
-        // We're using the note's original content field to store the original note's
-        // title
-        String noteTitle = note.getContent().split("\n\n")[0]; // Get the first line as title
-        String noteContent = note.getContent().substring(noteTitle.length()).trim(); // Remove title from content
+            // Safely parse the content
+            String content = note.getContent();
+            if (content != null && !content.isEmpty()) {
+                // Try to extract title and content safely
+                String[] parts = content.split("\n\n", 2);
+                String noteTitle = parts.length > 0 ? parts[0].trim() : "";
+                String noteContent = parts.length > 1 ? parts[1].trim() : content;
+                
+                // Set content with title and content properly formatted
+                holder.contentTextView.setText(noteTitle.isEmpty() ? 
+                        noteContent : 
+                        noteTitle + "\n\n" + noteContent);
+            } else {
+                holder.contentTextView.setText("");
+            }
 
-        // Format content to show both title and content
-        String formattedContent = "<b>" + noteTitle + "</b>\n\n" + noteContent;
+            // Set category with null check
+            holder.categoryChip.setText(note.getCategory() != null ? 
+                    note.getCategory() : "Unknown");
 
-        // If using HTML formatting:
-        // holder.contentTextView.setText(Html.fromHtml(formattedContent,
-        // Html.FROM_HTML_MODE_COMPACT));
-        // Or simpler approach:
-        holder.contentTextView.setText(noteTitle + "\n\n" + noteContent);
-
-        holder.categoryChip.setText(note.getCategory());
-
-        // Format and set date
-        String dateStr = dateFormat.format(new Date(note.getTimestamp()));
-        holder.dateTextView.setText(dateStr);
+            // Format and set date
+            String dateStr = dateFormat.format(new Date(note.getTimestamp()));
+            holder.dateTextView.setText(dateStr);
+        } catch (Exception e) {
+            Log.e("TaggedNoteAdapter", "Error binding view holder", e);
+        }
     }
 
     @Override
