@@ -48,7 +48,7 @@ public class DriveServiceHelper {
      */
     public Task<String> createFile(String fileName, String content) {
         TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
-        
+
         executor.execute(() -> {
             try {
                 // First, create metadata for the file
@@ -69,7 +69,7 @@ public class DriveServiceHelper {
                 writer.close();
 
                 int responseCode = conn.getResponseCode();
-                
+
                 if (responseCode >= 200 && responseCode < 300) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     StringBuilder response = new StringBuilder();
@@ -78,26 +78,26 @@ public class DriveServiceHelper {
                         response.append(line);
                     }
                     reader.close();
-                    
+
                     JSONObject json = new JSONObject(response.toString());
                     String fileId = json.getString("id");
-                    
+
                     // Upload content to the created file
                     updateFileContent(fileId, content);
-                    
+
                     mainHandler.post(() -> taskCompletionSource.setResult(fileId));
                 } else {
                     String error = "Error creating file: " + responseCode;
                     Log.e(TAG, error);
                     mainHandler.post(() -> taskCompletionSource.setException(new IOException(error)));
                 }
-                
+
             } catch (Exception e) {
                 Log.e(TAG, "Error creating file", e);
                 mainHandler.post(() -> taskCompletionSource.setException(e));
             }
         });
-        
+
         return taskCompletionSource.getTask();
     }
 
@@ -106,21 +106,21 @@ public class DriveServiceHelper {
      */
     public Task<FileList> queryFiles() {
         TaskCompletionSource<FileList> taskCompletionSource = new TaskCompletionSource<>();
-        
-        // Create mock FileList with simulated data 
+
+        // Create mock FileList with simulated data
         // (would need actual Drive API implementation)
         FileList mockFileList = new FileList();
         List<File> files = new ArrayList<>();
-        
+
         File mockFile = new File();
         mockFile.setId("mockFileId");
         mockFile.setName("Example.txt");
         mockFile.setMimeType("text/plain");
         files.add(mockFile);
-        
+
         mockFileList.setFiles(files);
         taskCompletionSource.setResult(mockFileList);
-        
+
         return taskCompletionSource.getTask();
     }
 

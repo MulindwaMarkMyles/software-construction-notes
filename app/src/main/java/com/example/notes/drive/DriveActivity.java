@@ -121,7 +121,7 @@ public class DriveActivity extends AppCompatActivity {
         if (account != null) {
             // User is signed in
             updateUI(true);
-            driveServiceHelper = new DriveServiceHelper(this, account);
+            driveServiceHelper = new DriveServiceHelper(account); // Updated constructor
             loadDriveFiles();
 
             if (noteId != -1) {
@@ -174,7 +174,7 @@ public class DriveActivity extends AppCompatActivity {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             // Signed in successfully
-            driveServiceHelper = new DriveServiceHelper(this, account);
+            driveServiceHelper = new DriveServiceHelper(account); // Updated constructor
             updateUI(true);
             loadDriveFiles();
 
