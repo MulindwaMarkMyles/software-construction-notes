@@ -109,11 +109,13 @@ public class NotesListFragment extends Fragment {
             public void onItemClick(Note note) {
                 try {
                     // Log which note is being opened
-                    Log.d(TAG, "Opening note: ID=" + note.getId() + 
-                          ", title=" + note.getTitle() + 
-                          ", content preview=" + (note.getContent() != null ? 
-                          note.getContent().substring(0, Math.min(20, note.getContent().length())) + "..." : "null"));
-                    
+                    Log.d(TAG, "Opening note: ID=" + note.getId() +
+                            ", title=" + note.getTitle() +
+                            ", content preview="
+                            + (note.getContent() != null
+                                    ? note.getContent().substring(0, Math.min(20, note.getContent().length())) + "..."
+                                    : "null"));
+
                     // Open note detail with this note
                     Intent intent = new Intent(getContext(), NoteDetailActivity.class);
                     intent.putExtra("noteId", note.getId()); // This is an int

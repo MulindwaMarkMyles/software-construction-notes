@@ -93,17 +93,17 @@ public class NoteDetailActivity extends AppCompatActivity {
         if (intent != null) {
             // Check if we're receiving a long (the normal case)
             noteId = intent.getLongExtra("noteId", -1);
-            
+
             // If the previous check failed, try for an int (fallback)
             if (noteId == -1) {
                 noteId = intent.getIntExtra("noteId", -1);
-                
+
                 // Log the received ID for debugging
                 Log.d(TAG, "Received note ID as int: " + noteId);
             } else {
                 Log.d(TAG, "Received note ID as long: " + noteId);
             }
-            
+
             if (noteId != -1) {
                 // Load existing note
                 loadNote();
@@ -207,10 +207,10 @@ public class NoteDetailActivity extends AppCompatActivity {
         try {
             note = databaseHelper.getNoteById((int) noteId);
             if (note != null) {
-                Log.d(TAG, "Note loaded: " + note.getTitle() + ", content: " + 
-                      (note.getContent() != null ? note.getContent().substring(0, 
-                      Math.min(20, note.getContent().length())) + "..." : "null"));
-                      
+                Log.d(TAG, "Note loaded: " + note.getTitle() + ", content: " +
+                        (note.getContent() != null ? note.getContent().substring(0,
+                                Math.min(20, note.getContent().length())) + "..." : "null"));
+
                 noteHeadingEditText.setText(note.getTitle());
                 noteDetailsEditText.setText(note.getContent());
                 setTitle("Edit: " + note.getTitle());

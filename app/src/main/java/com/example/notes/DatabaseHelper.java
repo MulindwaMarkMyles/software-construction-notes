@@ -294,14 +294,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Get a single note by ID
     public Note getNoteById(int noteId) {
         Note note = null;
-        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ? AND %s = 0",
-                TABLE_NOTES, KEY_NOTE_ID, KEY_NOTE_DELETED);
+        String NOTES_SELECT_QUERY = String.format("SELECT * FROM %s WHERE %s = ?",
+                TABLE_NOTES, KEY_NOTE_ID);
 
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = null;
 
         try {
+            Log.d("DatabaseHelper", "Fetching note with ID: " + noteId);
             cursor = db.rawQuery(NOTES_SELECT_QUERY, new String[] { String.valueOf(noteId) });
+
             if (cursor != null && cursor.moveToFirst()) {
                 int idIndex = cursor.getColumnIndex(KEY_NOTE_ID);
                 int titleIndex = cursor.getColumnIndex(KEY_NOTE_TITLE);
@@ -310,6 +312,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 int timestampIndex = cursor.getColumnIndex(KEY_NOTE_TIMESTAMP);
                 int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
                 int favoriteIndex = cursor.getColumnIndex(KEY_NOTE_FAVORITE);
+                int deletedIndex = cursor.getColumnIndex(KEY_NOTE_DELETED);
 
                 int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
                 String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
@@ -318,12 +321,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 long timestamp = timestampIndex != -1 ? cursor.getLong(timestampIndex) : System.currentTimeMillis();
                 int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
                 boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
+                boolean isDeleted = deletedIndex != -1 && cursor.getInt(deletedIndex) == 1;
 
                 note = new Note(id, title, content, category, timestamp, priority);
                 note.setFavorite(isFavorite);
+
+                Log.d("DatabaseHelper", "Note found: ID=" + id + ", title=" + title +
+                        ", content length=" + content.length() + ", isDeleted=" + isDeleted);
+            } else {
+                Log.w("DatabaseHelper", "Note with ID " + noteId + " not found in database");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("DatabaseHelper", "Error getting note by ID: " + e.getMessage(), e);
         } finally {
             if (cursor != null && !cursor.isClosed()) {
                 cursor.close();
