@@ -138,10 +138,13 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             // Apply theme-specific styling
             applyThemeToViewHolder(holder);
 
-            // Set up click listener
+            // Make sure click listener works by removing any existing ones first
+            holder.itemView.setOnClickListener(null);
             holder.itemView.setOnClickListener(v -> {
-                if (clickListener != null) {
-                    clickListener.onItemClick(note);
+                int adapterPosition = holder.getAdapterPosition();
+                if (adapterPosition != RecyclerView.NO_POSITION && clickListener != null) {
+                    Note clickedNote = notesList.get(adapterPosition);
+                    clickListener.onItemClick(clickedNote);
                 }
             });
 

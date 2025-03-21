@@ -90,8 +90,20 @@ public class NoteDetailActivity extends AppCompatActivity {
 
         // Get note ID from intent
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra("noteId")) {
+        if (intent != null) {
+            // Check if we're receiving a long (the normal case)
             noteId = intent.getLongExtra("noteId", -1);
+            
+            // If the previous check failed, try for an int (fallback)
+            if (noteId == -1) {
+                noteId = intent.getIntExtra("noteId", -1);
+                
+                // Log the received ID for debugging
+                Log.d(TAG, "Received note ID as int: " + noteId);
+            } else {
+                Log.d(TAG, "Received note ID as long: " + noteId);
+            }
+            
             if (noteId != -1) {
                 // Load existing note
                 loadNote();
@@ -192,27 +204,45 @@ public class NoteDetailActivity extends AppCompatActivity {
     }
 
     private void loadNote() {
-        note = databaseHelper.getNoteById((int) noteId);
-        if (note != null) {
-            noteHeadingEditText.setText(note.getTitle());
-            noteDetailsEditText.setText(note.getContent());
-            setTitle("Edit: " + note.getTitle());
+        try {
+            note = databaseHelper.getNoteById((int) noteId);
+            if (note != null) {
+                Log.d(TAG, "Note loaded: " + note.getTitle() + ", content: " + 
+                      (note.getContent() != null ? note.getContent().substring(0, 
+                      Math.min(20, note.getContent().length())) + "..." : "null"));
+                      
+                noteHeadingEditText.setText(note.getTitle());
+                noteDetailsEditText.setText(note.getContent());
+                setTitle("Edit: " + note.getTitle());
 
-            // Set the correct category chip
-            switch (note.getCategory()) {
-                case "Work":
-                    chipWork.setChecked(true);
-                    break;
-                case "Study":
-                    chipStudy.setChecked(true);
-                    break;
-                case "Miscellaneous":
-                    chipMisc.setChecked(true);
-                    break;
-                default:
-                    chipPersonal.setChecked(true);
-                    break;
+                // Set the correct category chip
+                switch (note.getCategory()) {
+                    case "Work":
+                        chipWork.setChecked(true);
+                        currentCategory = "Work";
+                        break;
+                    case "Study":
+                        chipStudy.setChecked(true);
+                        currentCategory = "Study";
+                        break;
+                    case "Miscellaneous":
+                        chipMisc.setChecked(true);
+                        currentCategory = "Miscellaneous";
+                        break;
+                    default:
+                        chipPersonal.setChecked(true);
+                        currentCategory = "Personal";
+                        break;
+                }
+            } else {
+                Log.e(TAG, "Note not found for ID: " + noteId);
+                Toast.makeText(this, "Error: Note not found", Toast.LENGTH_SHORT).show();
+                finish(); // Close the activity if note not found
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading note: " + e.getMessage(), e);
+            Toast.makeText(this, "Error loading note", Toast.LENGTH_SHORT).show();
+            finish(); // Close the activity on error
         }
     }
 

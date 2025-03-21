@@ -103,13 +103,25 @@ public class NotesListFragment extends Fragment {
         // Apply theme after creating adapter
         updateAdapterTheme();
 
-        // Set up click listener for opening note details
+        // Set up click listener for opening note details with proper debugging
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Note note) {
-                Intent intent = new Intent(getContext(), NoteDetailActivity.class);
-                intent.putExtra("noteId", note.getId());
-                startActivity(intent);
+                try {
+                    // Log which note is being opened
+                    Log.d(TAG, "Opening note: ID=" + note.getId() + 
+                          ", title=" + note.getTitle() + 
+                          ", content preview=" + (note.getContent() != null ? 
+                          note.getContent().substring(0, Math.min(20, note.getContent().length())) + "..." : "null"));
+                    
+                    // Open note detail with this note
+                    Intent intent = new Intent(getContext(), NoteDetailActivity.class);
+                    intent.putExtra("noteId", note.getId()); // This is an int
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error opening note details: " + e.getMessage(), e);
+                    Toast.makeText(getContext(), "Error opening note", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
