@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -635,19 +636,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean noteHasTags(int noteId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(
-                TABLE_TAGS, // Use TABLE_TAGS instead of TABLE_NOTE_TAGS
-                new String[] { "COUNT(*)" },
-                KEY_TAG_NOTE_ID + " = ?",
-                new String[] { String.valueOf(noteId) },
-                null, null, null);
+        try {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = db.query(
+                    TABLE_TAGS, // Use the constant for the table name
+                    new String[] { "COUNT(*)" },
+                    KEY_TAG_NOTE_ID + " = ?",
+                    new String[] { String.valueOf(noteId) },
+                    null, null, null);
 
-        int count = 0;
-        if (cursor != null && cursor.moveToFirst()) {
-            count = cursor.getInt(0);
-            cursor.close();
+            int count = 0;
+            if (cursor != null && cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+                cursor.close();
+            }
+            return count > 0;
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error checking if note has tags", e);
+            return false;
         }
-        return count > 0;
     }
 }

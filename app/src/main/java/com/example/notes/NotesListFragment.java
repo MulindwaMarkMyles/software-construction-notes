@@ -95,6 +95,7 @@ public class NotesListFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
+        // Initialize the adapter with context and empty list
         adapter = new NoteAdapter(getContext(), notesList);
         notesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         notesRecyclerView.setAdapter(adapter);
@@ -102,15 +103,7 @@ public class NotesListFragment extends Fragment {
         // Apply theme after creating adapter
         updateAdapterTheme();
 
-        // Add click listener to open note detail
-        adapter.setOnItemClickListener(note -> {
-            // Open note detail with this note
-            Intent intent = new Intent(getContext(), NoteDetailActivity.class);
-            intent.putExtra("noteId", (long) note.getId());
-            startActivity(intent);
-        });
-
-        // Add long click listener for tagging
+        // Set up click listener for opening note details
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Note note) {
@@ -262,7 +255,8 @@ public class NotesListFragment extends Fragment {
         if (wasDarkTheme != isDarkTheme) {
             updateAdapterTheme();
         }
-        // Refresh notes list when returning to fragment
+
+        // Refresh notes list when returning to fragment to update tag icons
         refreshNotes();
     }
 
@@ -308,6 +302,7 @@ public class NotesListFragment extends Fragment {
                 DatabaseHelper databaseHelper = DatabaseHelper.getInstance(getContext());
                 notesList.clear();
 
+                // Get appropriate notes based on current filter
                 if (showFavoritesOnly) {
                     notesList.addAll(databaseHelper.getFavoriteNotes());
                 } else if (currentCategory != null) {
@@ -316,8 +311,9 @@ public class NotesListFragment extends Fragment {
                     notesList.addAll(databaseHelper.getAllNotes());
                 }
 
+                // Update the adapter with the new notes list
                 if (adapter != null) {
-                    adapter.updateList(notesList);
+                    adapter.updateNotes(notesList); // Use updateNotes to ensure tag icons are updated
                     showEmptyStateIfNeeded(notesList);
                 }
             }
@@ -427,9 +423,12 @@ public class NotesListFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     List<UserTag> users = new ArrayList<>();
+                    FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                    String currentUserId = currentUser != null ? currentUser.getUid() : "";
+
                     for (DocumentSnapshot doc : snapshot.getDocuments()) {
                         // Don't show current user in results
-                        if (!doc.getId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                        if (!doc.getId().equals(currentUserId)) {
                             UserTag user = new UserTag(
                                     doc.getId(),
                                     doc.getString("email"),
@@ -445,6 +444,9 @@ public class NotesListFragment extends Fragment {
     }
 
     private void tagUser(Note note, String userId, String email) {
+        if (getContext() == null)
+            return;
+
         // Save to local database
         DatabaseHelper.getInstance(requireContext()).addTagToNote(note.getId(), userId, email);
 
@@ -468,10 +470,17 @@ public class NotesListFragment extends Fragment {
                 .add(sharedNote)
                 .addOnSuccessListener(documentReference -> {
                     Log.d(TAG, "SharedNote added with ID: " + documentReference.getId());
+
                     // Send notification
                     sendTagNotification(userId, email, note);
-                    // Refresh adapter to show tag icon
-                    adapter.notifyDataSetChanged();
+
+                    // Refresh notes list to update tag icons
+                    refreshNotes();
+
+                    // Show success message
+                    Toast.makeText(requireContext(),
+                            "Tagged " + email + " successfully",
+                            Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error adding shared note", e);

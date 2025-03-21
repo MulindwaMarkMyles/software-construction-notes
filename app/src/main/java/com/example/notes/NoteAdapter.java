@@ -2,6 +2,7 @@ package com.example.notes;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,84 +73,88 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-        Note note = notesList.get(position);
-        SettingsManager settingsManager = SettingsManager.getInstance(context);
+        try {
+            Note note = notesList.get(position);
+            SettingsManager settingsManager = SettingsManager.getInstance(context);
 
-        // Set text with null checks to prevent crashes
-        holder.titleTextView.setText(note.getTitle() != null ? note.getTitle() : "");
+            // Set text with null checks to prevent crashes
+            holder.titleTextView.setText(note.getTitle() != null ? note.getTitle() : "");
 
-        // Limit content preview length to prevent UI issues
-        String contentPreview = note.getContent() != null ? note.getContent() : "";
-        if (contentPreview.length() > 100) {
-            contentPreview = contentPreview.substring(0, 97) + "...";
-        }
-        holder.contentPreview.setText(contentPreview);
-
-        // Show/hide date based on settings
-        if (settingsManager.shouldShowDate()) {
-            holder.dateTextView.setVisibility(View.VISIBLE);
-            holder.dateTextView.setText(formatDate(note.getTimestamp()));
-        } else {
-            holder.dateTextView.setVisibility(View.GONE);
-        }
-
-        // Set category
-        holder.categoryChip.setText(note.getCategory());
-
-        // Set category color
-        int categoryColor;
-        switch (note.getCategory()) {
-            case "Personal":
-                categoryColor = R.color.category_personal;
-                break;
-            case "Work":
-                categoryColor = R.color.category_work;
-                break;
-            case "Study":
-                categoryColor = R.color.category_study;
-                break;
-            default:
-                categoryColor = R.color.category_misc;
-                break;
-        }
-        holder.categoryChip.setChipBackgroundColorResource(categoryColor);
-
-        // Set priority indicator
-        switch (note.getPriority()) {
-            case 2: // High
-                holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
-                holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_high));
-                break;
-            case 1: // Medium
-                holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
-                holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_medium));
-                break;
-            case 0: // Low
-                holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
-                holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_low));
-                break;
-        }
-
-        // Show tag icon if this note has tags
-        holder.tagIcon.setVisibility(notesWithTags.contains(note.getId()) ? View.VISIBLE : View.GONE);
-
-        // Apply theme-specific styling
-        applyThemeToViewHolder(holder);
-
-        // Set up click listener
-        holder.itemView.setOnClickListener(v -> {
-            if (clickListener != null) {
-                clickListener.onItemClick(note);
+            // Limit content preview length to prevent UI issues
+            String contentPreview = note.getContent() != null ? note.getContent() : "";
+            if (contentPreview.length() > 100) {
+                contentPreview = contentPreview.substring(0, 97) + "...";
             }
-        });
+            holder.contentPreview.setText(contentPreview);
 
-        // Set up long click listener
-        holder.itemView.setOnLongClickListener(v -> {
-            if (longClickListener != null) {
-                return longClickListener.onItemLongClick(note, v);
+            // Show/hide date based on settings
+            if (settingsManager.shouldShowDate()) {
+                holder.dateTextView.setVisibility(View.VISIBLE);
+                holder.dateTextView.setText(formatDate(note.getTimestamp()));
+            } else {
+                holder.dateTextView.setVisibility(View.GONE);
             }
-            return false;
-        });
+
+            // Set category
+            holder.categoryChip.setText(note.getCategory());
+
+            // Set category color
+            int categoryColor;
+            switch (note.getCategory()) {
+                case "Personal":
+                    categoryColor = R.color.category_personal;
+                    break;
+                case "Work":
+                    categoryColor = R.color.category_work;
+                    break;
+                case "Study":
+                    categoryColor = R.color.category_study;
+                    break;
+                default:
+                    categoryColor = R.color.category_misc;
+                    break;
+            }
+            holder.categoryChip.setChipBackgroundColorResource(categoryColor);
+
+            // Set priority indicator
+            switch (note.getPriority()) {
+                case 2: // High
+                    holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
+                    holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_high));
+                    break;
+                case 1: // Medium
+                    holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
+                    holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_medium));
+                    break;
+                case 0: // Low
+                    holder.priorityIndicator.setImageResource(R.drawable.ic_priority_high);
+                    holder.priorityIndicator.setColorFilter(context.getResources().getColor(R.color.priority_low));
+                    break;
+            }
+
+            // Show tag icon if this note has tags - ensure this is called
+            holder.tagIcon.setVisibility(notesWithTags.contains(note.getId()) ? View.VISIBLE : View.GONE);
+
+            // Apply theme-specific styling
+            applyThemeToViewHolder(holder);
+
+            // Set up click listener
+            holder.itemView.setOnClickListener(v -> {
+                if (clickListener != null) {
+                    clickListener.onItemClick(note);
+                }
+            });
+
+            // Set up long click listener
+            holder.itemView.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    return longClickListener.onItemLongClick(note, v);
+                }
+                return false;
+            });
+        } catch (Exception e) {
+            Log.e("NoteAdapter", "Error binding view", e);
+        }
     }
 
     private void applyThemeToViewHolder(NoteViewHolder holder) {
@@ -205,9 +210,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     }
 
     public void updateNotes(List<Note> newNotes) {
-        this.notesList.clear();
-        this.notesList.addAll(newNotes);
-        updateNotesWithTags();
+        this.notesList = newNotes;
+        updateNotesWithTags(); // Make sure to call this to refresh tag icons
         notifyDataSetChanged();
     }
 
@@ -215,11 +219,15 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         // Clear existing set
         notesWithTags.clear();
 
-        // Get all notes with tags from the database
-        for (Note note : notesList) {
-            if (dbHelper.noteHasTags(note.getId())) {
-                notesWithTags.add(note.getId());
+        try {
+            // Get all notes with tags from the database
+            for (Note note : notesList) {
+                if (dbHelper.noteHasTags(note.getId())) {
+                    notesWithTags.add(note.getId());
+                }
             }
+        } catch (Exception e) {
+            Log.e("NoteAdapter", "Error updating tags", e);
         }
     }
 
