@@ -149,4 +149,6 @@
     <string name="sign_in_required">Sign in required</string>
     <string name="no_note_selected">No note selected</string>
     <string name="sign_in_failed">Sign in failed</string>
+    <string name="google_auth_error">Google authentication failed. Please try again.</string>
+    <string name="default_web_client_id" translatable="false">695303036729-jqcclj7brocutjf8n5ll7mot2jt6fm5g.apps.googleusercontent.com</string>
 </resources>

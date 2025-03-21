@@ -9,23 +9,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -36,11 +30,27 @@ public class DriveServiceHelper {
     private static final String TAG = "DriveServiceHelper";
     private final Executor executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final String accessToken;
-    private final String baseUrl = "https://www.googleapis.com/drive/v3";
+    private final Drive driveService;
+    private final Context context;
 
-    public DriveServiceHelper(GoogleSignInAccount account) {
-        this.accessToken = account.getIdToken(); // Use ID token for authenticated requests
+    public DriveServiceHelper(Context context, GoogleSignInAccount account) {
+        this.context = context;
+        
+        Log.d(TAG, "Initializing DriveServiceHelper with account: " + account.getEmail());
+        
+        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
+                context, Collections.singleton(DriveScopes.DRIVE_FILE));
+        credential.setSelectedAccount(account.getAccount());
+        
+        // Build the Drive service
+        driveService = new Drive.Builder(
+                new NetHttpTransport(),
+                GsonFactory.getDefaultInstance(),
+                credential)
+                .setApplicationName("Notes App")
+                .build();
+        
+        Log.d(TAG, "Drive service initialized successfully");
     }
 
     /**
@@ -51,47 +61,27 @@ public class DriveServiceHelper {
 
         executor.execute(() -> {
             try {
-                // First, create metadata for the file
-                URL url = new URL(baseUrl + "/files");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setDoOutput(true);
-
-                JSONObject metadata = new JSONObject();
-                metadata.put("name", fileName);
-                metadata.put("mimeType", "text/plain");
-
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()));
-                writer.write(metadata.toString());
-                writer.flush();
-                writer.close();
-
-                int responseCode = conn.getResponseCode();
-
-                if (responseCode >= 200 && responseCode < 300) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
-
-                    JSONObject json = new JSONObject(response.toString());
-                    String fileId = json.getString("id");
-
-                    // Upload content to the created file
-                    updateFileContent(fileId, content);
-
-                    mainHandler.post(() -> taskCompletionSource.setResult(fileId));
-                } else {
-                    String error = "Error creating file: " + responseCode;
-                    Log.e(TAG, error);
-                    mainHandler.post(() -> taskCompletionSource.setException(new IOException(error)));
-                }
-
+                Log.d(TAG, "Creating file: " + fileName);
+                
+                // Create file metadata
+                File fileMetadata = new File();
+                fileMetadata.setName(fileName);
+                fileMetadata.setMimeType("text/plain");
+                
+                // Convert content to bytes
+                com.google.api.client.http.ByteArrayContent mediaContent = 
+                        new com.google.api.client.http.ByteArrayContent(
+                            "text/plain", content.getBytes());
+                
+                // Create the file using Drive API
+                File file = driveService.files().create(fileMetadata, mediaContent)
+                        .setFields("id, name, webViewLink")
+                        .execute();
+                
+                Log.d(TAG, "File created with ID: " + file.getId() + " and name: " + file.getName());
+                Log.d(TAG, "File can be viewed at: " + file.getWebViewLink());
+                
+                mainHandler.post(() -> taskCompletionSource.setResult(file.getId()));
             } catch (Exception e) {
                 Log.e(TAG, "Error creating file", e);
                 mainHandler.post(() -> taskCompletionSource.setException(e));
@@ -107,19 +97,46 @@ public class DriveServiceHelper {
     public Task<FileList> queryFiles() {
         TaskCompletionSource<FileList> taskCompletionSource = new TaskCompletionSource<>();
 
-        // Create mock FileList with simulated data
-        // (would need actual Drive API implementation)
-        FileList mockFileList = new FileList();
-        List<File> files = new ArrayList<>();
+        executor.execute(() -> {
+            try {
+                Log.d(TAG, "Querying files from Drive");
+                
+                FileList fileList = driveService.files().list()
+                        .setSpaces("drive")
+                        .setFields("files(id, name, mimeType, modifiedTime, webViewLink)")
+                        .setPageSize(50)  // Limit to 50 files
+                        .execute();
+                
+                Log.d(TAG, "Found " + fileList.getFiles().size() + " files");
+                
+                mainHandler.post(() -> taskCompletionSource.setResult(fileList));
+            } catch (Exception e) {
+                Log.e(TAG, "Error querying files", e);
+                mainHandler.post(() -> taskCompletionSource.setException(e));
+            }
+        });
 
-        File mockFile = new File();
-        mockFile.setId("mockFileId");
-        mockFile.setName("Example.txt");
-        mockFile.setMimeType("text/plain");
-        files.add(mockFile);
+        return taskCompletionSource.getTask();
+    }
+    
+    /**
+     * Downloads a file's content.
+     */
+    public Task<String> readFile(String fileId) {
+        TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
 
-        mockFileList.setFiles(files);
-        taskCompletionSource.setResult(mockFileList);
+        executor.execute(() -> {
+            try {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                driveService.files().get(fileId).executeMediaAndDownloadTo(outputStream);
+                String content = new String(outputStream.toByteArray());
+                
+                mainHandler.post(() -> taskCompletionSource.setResult(content));
+            } catch (Exception e) {
+                Log.e(TAG, "Error reading file", e);
+                mainHandler.post(() -> taskCompletionSource.setException(e));
+            }
+        });
 
         return taskCompletionSource.getTask();
     }
@@ -127,22 +144,25 @@ public class DriveServiceHelper {
     /**
      * Updates a file's content.
      */
-    private void updateFileContent(String fileId, String content) throws IOException {
-        URL url = new URL(baseUrl + "/files/" + fileId);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("PATCH");
-        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-        conn.setRequestProperty("Content-Type", "text/plain");
-        conn.setDoOutput(true);
+    public Task<Void> updateFile(String fileId, String content) {
+        TaskCompletionSource<Void> taskCompletionSource = new TaskCompletionSource<>();
 
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()));
-        writer.write(content);
-        writer.flush();
-        writer.close();
+        executor.execute(() -> {
+            try {
+                // Convert content to bytes
+                com.google.api.client.http.ByteArrayContent mediaContent = 
+                        new com.google.api.client.http.ByteArrayContent(
+                            "text/plain", content.getBytes());
 
-        int responseCode = conn.getResponseCode();
-        if (responseCode < 200 || responseCode >= 300) {
-            throw new IOException("Error updating file content: " + responseCode);
-        }
+                driveService.files().update(fileId, null, mediaContent).execute();
+                
+                mainHandler.post(() -> taskCompletionSource.setResult(null));
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating file", e);
+                mainHandler.post(() -> taskCompletionSource.setException(e));
+            }
+        });
+
+        return taskCompletionSource.getTask();
     }
 }

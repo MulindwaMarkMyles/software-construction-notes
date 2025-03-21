@@ -531,7 +531,10 @@ public class NoteDetailActivity extends AppCompatActivity {
         // Check if user is signed in to Google
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null) {
-            driveServiceHelper = new DriveServiceHelper(account);
+            Log.d(TAG, "Found Google Sign-In account: " + account.getEmail());
+            driveServiceHelper = new DriveServiceHelper(this, account);
+        } else {
+            Log.d(TAG, "No Google Sign-In account found");
         }
     }
 
@@ -544,14 +547,15 @@ public class NoteDetailActivity extends AppCompatActivity {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account == null) {
             // User is not signed in to Google, launch DriveActivity for authentication
+            Log.d(TAG, "No Google account, launching Drive Activity");
             Intent intent = new Intent(this, DriveActivity.class);
             intent.putExtra("noteId", note.getId());
             startActivity(intent);
         } else {
             // User is already signed in, use DriveServiceHelper
             if (driveServiceHelper == null) {
-                // Fix: Just pass the account, not 'this'
-                driveServiceHelper = new DriveServiceHelper(account);
+                Log.d(TAG, "Creating new DriveServiceHelper");
+                driveServiceHelper = new DriveServiceHelper(this, account);
             }
 
             // Show progress dialog
@@ -564,17 +568,21 @@ public class NoteDetailActivity extends AppCompatActivity {
             // Convert note to text content
             String noteContent = note.getTitle() + "\n\n" + note.getContent();
             String fileName = note.getTitle() + ".txt";
+            
+            Log.d(TAG, "Uploading note: " + fileName);
 
             // Upload to Drive
             driveServiceHelper.createFile(fileName, noteContent)
                     .addOnSuccessListener(fileId -> {
                         progressDialog.dismiss();
+                        Log.d(TAG, "Upload successful, file ID: " + fileId);
                         Toast.makeText(this, R.string.note_uploaded_to_drive, Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(exception -> {
                         progressDialog.dismiss();
                         Log.e(TAG, "Couldn't create file", exception);
-                        Toast.makeText(this, R.string.drive_upload_failed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.drive_upload_failed + ": " + exception.getMessage(), 
+                                Toast.LENGTH_LONG).show();
                     });
         }
     }

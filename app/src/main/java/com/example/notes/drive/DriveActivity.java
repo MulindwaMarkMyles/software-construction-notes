@@ -96,9 +96,10 @@ public class DriveActivity extends AppCompatActivity {
             }
         });
 
-        // Initialize Google Sign In
+        // Initialize Google Sign In with proper scopes for Drive API
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestIdToken(getString(R.string.default_web_client_id))  // Add ID token request
                 .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
                 .build();
         signInClient = GoogleSignIn.getClient(this, signInOptions);
@@ -118,10 +119,11 @@ public class DriveActivity extends AppCompatActivity {
 
     private void checkSignInStatus() {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null) {
-            // User is signed in
+        if (account != null && account.getIdToken() != null) {
+            // User is signed in with valid token
+            Log.d(TAG, "Already signed in: " + account.getEmail());
             updateUI(true);
-            driveServiceHelper = new DriveServiceHelper(account); // Updated constructor
+            driveServiceHelper = new DriveServiceHelper(this, account);
             loadDriveFiles();
 
             if (noteId != -1) {
@@ -131,6 +133,7 @@ public class DriveActivity extends AppCompatActivity {
             }
         } else {
             // User is not signed in
+            Log.d(TAG, "Not signed in");
             updateUI(false);
             driveServiceHelper = null;
         }
@@ -173,8 +176,13 @@ public class DriveActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            
+            // Log success information for debugging
+            Log.d(TAG, "Sign in successful: " + account.getEmail());
+            Log.d(TAG, "ID Token: " + (account.getIdToken() != null ? "Present" : "Missing"));
+            
             // Signed in successfully
-            driveServiceHelper = new DriveServiceHelper(account); // Updated constructor
+            driveServiceHelper = new DriveServiceHelper(this, account); // Pass context and account
             updateUI(true);
             loadDriveFiles();
 
@@ -183,9 +191,28 @@ public class DriveActivity extends AppCompatActivity {
                 uploadButton.setVisibility(View.VISIBLE);
             }
         } catch (ApiException e) {
-            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            // Handle sign-in failure with detailed logging
+            Log.e(TAG, "signInResult:failed code=" + e.getStatusCode(), e);
+            
+            // Show more descriptive error message based on error code
+            String errorMessage;
+            switch (e.getStatusCode()) {
+                case 12500: // Sign in canceled by user
+                    errorMessage = "Sign in canceled";
+                    break;
+                case 12501: // Sign in canceled due to one-tap timeout
+                    errorMessage = "Sign in process timed out";
+                    break;
+                case 7: // Network error
+                    errorMessage = "Network error, check your connection";
+                    break;
+                default:
+                    errorMessage = "Sign in failed: " + e.getStatusCode();
+                    break;
+            }
+            
             updateUI(false);
-            Toast.makeText(this, R.string.sign_in_failed, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
         }
     }
 
