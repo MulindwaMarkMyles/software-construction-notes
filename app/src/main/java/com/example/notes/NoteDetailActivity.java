@@ -550,7 +550,8 @@ public class NoteDetailActivity extends AppCompatActivity {
         } else {
             // User is already signed in, use DriveServiceHelper
             if (driveServiceHelper == null) {
-                driveServiceHelper = new DriveServiceHelper(this, account);
+                // Fix: Just pass the account, not 'this'
+                driveServiceHelper = new DriveServiceHelper(account);
             }
 
             // Show progress dialog
