@@ -1,5 +1,6 @@
 package com.example.notes;
 
+import android.util.Log; // Add this import for the Log class
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
