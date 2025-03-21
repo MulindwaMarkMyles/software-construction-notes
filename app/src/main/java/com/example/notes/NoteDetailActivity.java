@@ -531,7 +531,7 @@ public class NoteDetailActivity extends AppCompatActivity {
         // Check if user is signed in to Google
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null) {
-            driveServiceHelper = new DriveServiceHelper(this, account);
+            driveServiceHelper = new DriveServiceHelper(account);
         }
     }
 
