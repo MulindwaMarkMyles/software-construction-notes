@@ -34,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import androidx.appcompat.app.AlertDialog; // Add this import
 import com.example.notes.TaggedNotesFragment;
+import com.example.notes.drive.DriveActivity; // Add this import
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 

@@ -5,7 +5,8 @@ import android.util.Log;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.http.ByteArrayContent;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
@@ -30,7 +31,7 @@ public class DriveServiceHelper {
         credential.setSelectedAccount(account.getAccount());
 
         driveService = new Drive.Builder(
-                AndroidHttp.newCompatibleTransport(),
+                new NetHttpTransport(),
                 new GsonFactory(),
                 credential)
                 .setApplicationName("Notes App")
@@ -47,7 +48,7 @@ public class DriveServiceHelper {
             fileMetadata.setMimeType("text/plain");
 
             // Convert content to bytes
-            java.io.ByteArrayContent mediaContent = new java.io.ByteArrayContent("text/plain", content.getBytes());
+            ByteArrayContent mediaContent = new ByteArrayContent("text/plain", content.getBytes());
 
             // Create file in Google Drive
             File file = driveService.files().create(fileMetadata, mediaContent)
@@ -89,7 +90,7 @@ public class DriveServiceHelper {
     public Task<Void> updateFile(String fileId, String content) {
         return Tasks.call(executor, () -> {
             // Convert content to bytes
-            java.io.ByteArrayContent mediaContent = new java.io.ByteArrayContent("text/plain", content.getBytes());
+            ByteArrayContent mediaContent = new ByteArrayContent("text/plain", content.getBytes());
 
             driveService.files().update(fileId, null, mediaContent).execute();
             return null;
