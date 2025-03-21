@@ -439,7 +439,8 @@ public class NoteDetailActivity extends AppCompatActivity {
                     note.getCategory(),
                     mAuth.getCurrentUser().getUid(),
                     mAuth.getCurrentUser().getEmail(),
-                    userId);
+                    userId,
+                    mAuth.getCurrentUser().getEmail()); // Add authorEmail parameter
 
             db.collection("shared_notes")
                     .add(sharedNote)
