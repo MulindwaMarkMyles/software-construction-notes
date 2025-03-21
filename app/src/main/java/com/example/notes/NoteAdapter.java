@@ -16,8 +16,10 @@ import com.google.android.material.chip.Chip;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
@@ -25,6 +27,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     private List<Note> notesList;
     private OnItemClickListener listener;
     private boolean isDarkTheme = false;
+    private DatabaseHelper dbHelper;
+    private Set<Integer> notesWithTags; // Track notes that have tags
 
     public interface OnItemClickListener {
         void onItemClick(Note note);
@@ -37,10 +41,14 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     public NoteAdapter(Context context, List<Note> notesList) {
         this.context = context;
         this.notesList = notesList;
+        this.dbHelper = DatabaseHelper.getInstance(context);
+        this.notesWithTags = new HashSet<>();
+        updateNotesWithTags();
     }
 
     public void updateList(List<Note> newList) {
         this.notesList = newList;
+        updateNotesWithTags();
         notifyDataSetChanged();
     }
 
@@ -111,8 +119,27 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                 break;
         }
 
+        // Show tag icon if this note has tags
+        holder.tagIcon.setVisibility(notesWithTags.contains(note.getId()) ? View.VISIBLE : View.GONE);
+
         // Apply theme-specific styling
         applyThemeToViewHolder(holder);
+
+        // Set up click listener
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(note);
+            }
+        });
+
+        // Set up long click listener
+        holder.itemView.setOnLongClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(note);
+                return true;
+            }
+            return false;
+        });
     }
 
     private void applyThemeToViewHolder(NoteViewHolder holder) {
@@ -170,13 +197,27 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     public void updateNotes(List<Note> newNotes) {
         this.notesList.clear();
         this.notesList.addAll(newNotes);
+        updateNotesWithTags();
         notifyDataSetChanged();
+    }
+
+    private void updateNotesWithTags() {
+        // Clear existing set
+        notesWithTags.clear();
+
+        // Get all notes with tags from the database
+        for (Note note : notesList) {
+            if (dbHelper.noteHasTags(note.getId())) {
+                notesWithTags.add(note.getId());
+            }
+        }
     }
 
     class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView, contentPreview, dateTextView;
         Chip categoryChip;
         ImageView priorityIndicator;
+        ImageView tagIcon; // New tag icon
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -186,6 +227,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             dateTextView = itemView.findViewById(R.id.note_date);
             categoryChip = itemView.findViewById(R.id.note_category);
             priorityIndicator = itemView.findViewById(R.id.note_priority);
+            tagIcon = itemView.findViewById(R.id.tag_icon); // Initialize the tag icon
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -194,6 +236,18 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                     if (listener != null && position != RecyclerView.NO_POSITION) {
                         listener.onItemClick(notesList.get(position));
                     }
+                }
+            });
+
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    int position = getAdapterPosition();
+                    if (listener != null && position != RecyclerView.NO_POSITION) {
+                        listener.onItemClick(notesList.get(position));
+                        return true;
+                    }
+                    return false;
                 }
             });
         }

@@ -9,13 +9,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.EditText;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +44,7 @@ public class NotesListFragment extends Fragment {
     private String currentCategory = null;
     private boolean showFavoritesOnly = false;
     private boolean isDarkTheme = false;
+    private AlertDialog userSearchDialog;
 
     @Nullable
     @Override
@@ -91,6 +104,24 @@ public class NotesListFragment extends Fragment {
                 intent.putExtra("noteId", (long) note.getId());
                 startActivity(intent);
             }
+        });
+
+        // Add long click listener for tagging
+        adapter.setOnNoteLongClickListener((note, view1) -> {
+            // Show options menu with tag option
+            PopupMenu popup = new PopupMenu(getContext(), view1);
+            popup.getMenuInflater().inflate(R.menu.note_context_menu, popup.getMenu());
+
+            // Handle menu item clicks
+            popup.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.action_tag_user) {
+                    showTagUserDialog(note);
+                    return true;
+                }
+                return false;
+            });
+
+            popup.show();
         });
     }
 
@@ -324,5 +355,133 @@ public class NotesListFragment extends Fragment {
             searchView.setQuery("", false);
             searchView.setIconified(true);
         }
+    }
+
+    private void showTagUserDialog(Note note) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.dialog_user_search, null);
+        EditText searchInput = view.findViewById(R.id.search_input);
+        RecyclerView userList = view.findViewById(R.id.user_list);
+
+        // Set up RecyclerView
+        userList.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        UserSearchAdapter userSearchAdapter = new UserSearchAdapter(user -> {
+            // Handle user selection - tag the selected user
+            tagUser(note, user.getUserId(), user.getEmail());
+            if (userSearchDialog != null) {
+                userSearchDialog.dismiss();
+            }
+        });
+
+        userList.setAdapter(userSearchAdapter);
+
+        // Search for users as user types
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                searchUsers(s.toString(), userSearchAdapter);
+            }
+        });
+
+        builder.setView(view)
+                .setTitle("Tag a user")
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        userSearchDialog = builder.create();
+        userSearchDialog.show();
+    }
+
+    private void searchUsers(String query, UserSearchAdapter adapter) {
+        if (query.isEmpty()) {
+            adapter.submitList(new ArrayList<>());
+            return;
+        }
+
+        // Query Firestore for users
+        FirebaseFirestore.getInstance().collection("users")
+                .whereGreaterThanOrEqualTo("email", query)
+                .whereLessThanOrEqualTo("email", query + '\uf8ff')
+                .limit(10)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<UserTag> users = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        // Don't show current user in results
+                        if (!doc.getId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                            UserTag user = new UserTag(
+                                    doc.getId(),
+                                    doc.getString("email"),
+                                    doc.getString("fcmToken"));
+                            users.add(user);
+                        }
+                    }
+                    adapter.submitList(users);
+                })
+                .addOnFailureListener(e -> Toast.makeText(requireContext(),
+                        "Error searching users: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
+    }
+
+    private void tagUser(Note note, String userId, String email) {
+        // Save to local database
+        DatabaseHelper.getInstance(requireContext()).addTagToNote(note.getId(), userId, email);
+
+        // Get current user details
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null)
+            return;
+
+        // Save to Firestore for cross-device sync
+        SharedNote sharedNote = new SharedNote(
+                String.valueOf(note.getId()),
+                note.getTitle(),
+                note.getContent(),
+                note.getCategory(),
+                currentUser.getUid(),
+                currentUser.getEmail(),
+                userId,
+                currentUser.getEmail());
+
+        FirebaseFirestore.getInstance().collection("shared_notes")
+                .add(sharedNote)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d(TAG, "SharedNote added with ID: " + documentReference.getId());
+                    // Send notification
+                    sendTagNotification(userId, email, note);
+                    // Refresh adapter to show tag icon
+                    adapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error adding shared note", e);
+                    Toast.makeText(requireContext(), "Failed to share note", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void sendTagNotification(String userId, String email, Note note) {
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener(document -> {
+                    String fcmToken = document.getString("fcmToken");
+                    if (fcmToken != null) {
+                        String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                        String title = getString(R.string.tag_notification_title);
+                        String message = getString(R.string.tag_notification_message,
+                                currentUserEmail, note.getTitle());
+
+                        NotesFirebaseMessagingService.sendDirectNotification(
+                                requireContext(), fcmToken, title, message);
+
+                        Toast.makeText(requireContext(), "Notification sent to " + email,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
