@@ -26,8 +26,21 @@
             android:textAppearance="@style/TextAppearance.Notes.Title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/note_date"
+            app:layout_constraintEnd_toStartOf="@id/tag_icon"
             tools:text="Meeting Notes" />
+            
+        <!-- New Tag icon -->
+        <ImageView
+            android:id="@+id/tag_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_tag"
+            android:visibility="gone"
+            android:contentDescription="@string/tagged_users"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/note_title"
+            app:layout_constraintBottom_toBottomOf="@id/note_title"
+            app:tint="@color/colorAccent" />
             
         <TextView
             android:id="@+id/note_date"

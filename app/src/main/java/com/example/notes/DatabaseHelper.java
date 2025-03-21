@@ -632,4 +632,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor.close();
         return tags;
     }
+
+    public boolean noteHasTags(int noteId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                TABLE_NOTE_TAGS,
+                new String[]{"COUNT(*)"},
+                KEY_NOTE_ID + " = ?",
+                new String[]{String.valueOf(noteId)},
+                null, null, null);
+
+        int count = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+            cursor.close();
+        }
+        return count > 0;
+    }
 }
