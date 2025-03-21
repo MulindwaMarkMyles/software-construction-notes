@@ -36,21 +36,26 @@ public class DriveServiceHelper {
     public DriveServiceHelper(Context context, GoogleSignInAccount account) {
         this.context = context;
 
-        Log.d(TAG, "Initializing DriveServiceHelper with account: " + account.getEmail());
+        try {
+            Log.d(TAG, "Initializing DriveServiceHelper with account: " + account.getEmail());
 
-        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
-                context, Collections.singleton(DriveScopes.DRIVE_FILE));
-        credential.setSelectedAccount(account.getAccount());
+            GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
+                    context, Collections.singleton(DriveScopes.DRIVE_FILE));
+            credential.setSelectedAccount(account.getAccount());
 
-        // Build the Drive service
-        driveService = new Drive.Builder(
-                new NetHttpTransport(),
-                GsonFactory.getDefaultInstance(),
-                credential)
-                .setApplicationName("Notes App")
-                .build();
+            // Build the Drive service
+            driveService = new Drive.Builder(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    credential)
+                    .setApplicationName("Notes App")
+                    .build();
 
-        Log.d(TAG, "Drive service initialized successfully");
+            Log.d(TAG, "Drive service initialized successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing DriveServiceHelper", e);
+            throw new RuntimeException("Failed to initialize Drive service", e);
+        }
     }
 
     /**
