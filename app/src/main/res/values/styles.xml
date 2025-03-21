@@ -65,6 +65,11 @@
         <item name="android:textColor">@color/text_primary_light</item>
         <item name="android:fontFamily">@font/poppins</item>
     </style>
+
+    <style name="TextAppearance.Notes.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
     
     <!-- Custom chip style -->
     <style name="Widget.App.Chip" parent="Widget.MaterialComponents.Chip.Choice">
