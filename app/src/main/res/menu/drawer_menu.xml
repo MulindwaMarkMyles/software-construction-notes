@@ -59,7 +59,7 @@
                 android:title="@string/nav_sign_out" />
             <item
                 android:id="@+id/nav_drive_sync"
-                android:icon="@drawable/ic_drive"
+                android:icon="@drawable/drive"
                 android:title="@string/drive_sync" />
         </menu>
     </item>
