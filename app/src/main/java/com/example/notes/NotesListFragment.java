@@ -39,6 +39,9 @@ import java.util.List;
 
 import com.example.notes.drive.DriveActivity;
 
+import android.widget.Toast;
+import android.app.ProgressDialog;
+
 public class NotesListFragment extends Fragment {
 
     private static final String TAG = "NotesListFragment";
