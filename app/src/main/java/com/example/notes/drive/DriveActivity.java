@@ -96,7 +96,7 @@ public class DriveActivity extends AppCompatActivity {
             }
         });
 
-        // Initialize Google Sign In with proper scopes for Drive API
+        // Initialize Google Sign In options
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
@@ -118,8 +118,8 @@ public class DriveActivity extends AppCompatActivity {
 
     private void checkSignInStatus() {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null && account.getIdToken() != null) {
-            // User is signed in with valid token
+        if (account != null) {
+            // User is signed in
             Log.d(TAG, "Already signed in: " + account.getEmail());
             updateUI(true);
             driveServiceHelper = new DriveServiceHelper(this, account);
@@ -195,7 +195,11 @@ public class DriveActivity extends AppCompatActivity {
             String errorMessage;
             switch (e.getStatusCode()) {
                 case 10:
-                    errorMessage = "Developer error: Check your OAuth client ID and SHA-1 certificate fingerprint in Firebase console";
+                    errorMessage = "Developer error: Please check that:\n" +
+                            "1. google-services.json is in the app folder\n" +
+                            "2. The SHA-1 fingerprint in Firebase console matches your app\n" +
+                            "3. The package name matches your app";
+                    showSetupGuideDialog();
                     break;
                 case 12500:
                     errorMessage = "Sign in canceled";
@@ -214,6 +218,25 @@ public class DriveActivity extends AppCompatActivity {
             updateUI(false);
             Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Shows a helpful dialog explaining how to set up Google Sign-In properly
+     */
+    private void showSetupGuideDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Google Sign-In Setup Guide")
+                .setMessage("To fix error 10, please follow these steps:\n\n" +
+                        "1. Make sure google-services.json is in the app folder\n\n" +
+                        "2. In Firebase console:\n" +
+                        "   - Add your SHA-1 fingerprint\n" +
+                        "   - Verify package name matches\n\n" +
+                        "3. In Google Cloud Console:\n" +
+                        "   - Enable Google Drive API\n" +
+                        "   - Create OAuth consent screen\n" +
+                        "   - Create OAuth client ID")
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void loadDriveFiles() {
@@ -264,6 +287,10 @@ public class DriveActivity extends AppCompatActivity {
         driveServiceHelper.createFile(fileName, noteContent)
                 .addOnSuccessListener(fileId -> {
                     progressDialog.dismiss();
+
+                    // Mark the note as in Drive
+                    databaseHelper.markNoteAsInDrive(noteId, true);
+
                     Toast.makeText(this, R.string.note_uploaded_to_drive, Toast.LENGTH_SHORT).show();
                     loadDriveFiles(); // Refresh file list
                 })

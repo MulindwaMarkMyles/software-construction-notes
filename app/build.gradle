@@ -35,6 +35,9 @@ dependencies {
     implementation 'com.google.http-client:google-http-client-gson:1.41.0'
     implementation 'com.google.guava:guava:31.1-android'
 
+    // Ensure we have the Google Services plugin dependency
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
+
     // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

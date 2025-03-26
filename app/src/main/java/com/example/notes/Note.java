@@ -8,6 +8,7 @@ public class Note {
     private long timestamp;
     private int priority; // 0 = low, 1 = medium, 2 = high
     private boolean isFavorite;
+    private boolean isInDrive; // New field to track Drive upload status
 
     public Note(int id, String title, String content, String category, long timestamp, int priority) {
         this.id = id;
@@ -17,6 +18,7 @@ public class Note {
         this.timestamp = timestamp;
         this.priority = priority;
         this.isFavorite = false;
+        this.isInDrive = false; // Default to false for new notes
     }
 
     public int getId() {
@@ -47,6 +49,10 @@ public class Note {
         return isFavorite;
     }
 
+    public boolean isInDrive() {
+        return isInDrive;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -73,5 +79,9 @@ public class Note {
 
     public void setFavorite(boolean favorite) {
         isFavorite = favorite;
+    }
+
+    public void setInDrive(boolean inDrive) {
+        isInDrive = inDrive;
     }
 }

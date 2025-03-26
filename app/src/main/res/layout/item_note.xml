@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
         
-        <!-- Modified title to have end constraint to tag icon -->
+        <!-- Modified title constraint to drive icon -->
         <TextView
             android:id="@+id/note_title"
             android:layout_width="0dp"
@@ -27,8 +27,22 @@
             android:textAppearance="@style/TextAppearance.Notes.Title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/tag_icon"
+            app:layout_constraintEnd_toStartOf="@id/drive_icon"
             tools:text="Meeting Notes" />
+
+        <!-- Drive icon positioned to the left of the tag icon -->
+        <ImageView
+            android:id="@+id/drive_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_drive"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="Uploaded to Drive"
+            app:layout_constraintEnd_toStartOf="@id/tag_icon"
+            app:layout_constraintTop_toTopOf="@id/note_title"
+            app:layout_constraintBottom_toBottomOf="@id/note_title"
+            app:tint="@color/colorAccent" />
             
         <!-- Tag icon positioned to the left of the date -->
         <ImageView

@@ -150,5 +150,6 @@
     <string name="no_note_selected">No note selected</string>
     <string name="sign_in_failed">Sign in failed</string>
     <string name="google_auth_error">Google authentication failed. Please try again.</string>
-    <string name="default_web_client_id" translatable="false">695303036729-jqcclj7brocutjf8n5ll7mot2jt6fm5g.apps.googleusercontent.com</string>
+    <string name="note_in_drive">This note has been uploaded to Google Drive</string>
+    <string name="default_web_client_id" translatable="false">809010238739-23brh119fpkqmc2qonq1psv5o7a8dsvi.apps.googleusercontent.com</string>
 </resources>

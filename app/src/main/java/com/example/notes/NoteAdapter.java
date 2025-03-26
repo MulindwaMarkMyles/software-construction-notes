@@ -135,6 +135,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             // Show tag icon if this note has tags - ensure this is called
             holder.tagIcon.setVisibility(notesWithTags.contains(note.getId()) ? View.VISIBLE : View.GONE);
 
+            // Show Drive icon if this note is in Drive
+            holder.driveIcon.setVisibility(note.isInDrive() ? View.VISIBLE : View.GONE);
+
             // Apply theme-specific styling
             applyThemeToViewHolder(holder);
 
@@ -238,7 +241,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         TextView titleTextView, contentPreview, dateTextView;
         Chip categoryChip;
         ImageView priorityIndicator;
-        ImageView tagIcon; // New tag icon
+        ImageView tagIcon;
+        ImageView driveIcon; // New Drive icon
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -248,7 +252,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             dateTextView = itemView.findViewById(R.id.note_date);
             categoryChip = itemView.findViewById(R.id.note_category);
             priorityIndicator = itemView.findViewById(R.id.note_priority);
-            tagIcon = itemView.findViewById(R.id.tag_icon); // Initialize the tag icon
+            tagIcon = itemView.findViewById(R.id.tag_icon);
+            driveIcon = itemView.findViewById(R.id.drive_icon); // Initialize Drive icon
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

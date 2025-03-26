@@ -15,7 +15,7 @@ import com.example.notes.model.UserTag;
 public class DatabaseHelper extends SQLiteOpenHelper {
     // Database Info
     private static final String DATABASE_NAME = "notes.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4; // Increment database version
 
     // Table Names
     private static final String TABLE_NOTES = "notes";
@@ -31,6 +31,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_NOTE_PRIORITY = "priority";
     private static final String KEY_NOTE_FAVORITE = "is_favorite";
     private static final String KEY_NOTE_DELETED = "is_deleted";
+    private static final String KEY_NOTE_IN_DRIVE = "is_in_drive"; // Add new column for Drive status
 
     // Tag Table Columns
     private static final String KEY_TAG_ID = "tag_id";
@@ -62,7 +63,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + KEY_NOTE_TIMESTAMP + " INTEGER,"
                 + KEY_NOTE_PRIORITY + " INTEGER DEFAULT 0,"
                 + KEY_NOTE_FAVORITE + " INTEGER DEFAULT 0,"
-                + KEY_NOTE_DELETED + " INTEGER DEFAULT 0"
+                + KEY_NOTE_DELETED + " INTEGER DEFAULT 0,"
+                + KEY_NOTE_IN_DRIVE + " INTEGER DEFAULT 0"
                 + ")";
         db.execSQL(CREATE_NOTES_TABLE);
 
@@ -82,6 +84,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             // Add is_deleted column if upgrading from version 1 or 2
             try {
                 db.execSQL("ALTER TABLE " + TABLE_NOTES + " ADD COLUMN " + KEY_NOTE_DELETED + " INTEGER DEFAULT 0");
+            } catch (Exception e) {
+                // Column might already exist
+                e.printStackTrace();
+            }
+        }
+
+        // Add Drive status column for version 4
+        if (oldVersion < 4) {
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_NOTES +
+                        " ADD COLUMN " + KEY_NOTE_IN_DRIVE + " INTEGER DEFAULT 0");
             } catch (Exception e) {
                 // Column might already exist
                 e.printStackTrace();
@@ -115,6 +128,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_NOTE_TIMESTAMP, note.getTimestamp());
         values.put(KEY_NOTE_PRIORITY, note.getPriority());
         values.put(KEY_NOTE_FAVORITE, note.isFavorite() ? 1 : 0);
+        values.put(KEY_NOTE_IN_DRIVE, note.isInDrive() ? 1 : 0); // Add Drive status
 
         try {
             db.beginTransaction();
@@ -313,6 +327,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 int priorityIndex = cursor.getColumnIndex(KEY_NOTE_PRIORITY);
                 int favoriteIndex = cursor.getColumnIndex(KEY_NOTE_FAVORITE);
                 int deletedIndex = cursor.getColumnIndex(KEY_NOTE_DELETED);
+                int inDriveIndex = cursor.getColumnIndex(KEY_NOTE_IN_DRIVE);
 
                 int id = idIndex != -1 ? cursor.getInt(idIndex) : 0;
                 String title = titleIndex != -1 ? cursor.getString(titleIndex) : "";
@@ -322,9 +337,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 int priority = priorityIndex != -1 ? cursor.getInt(priorityIndex) : 0;
                 boolean isFavorite = favoriteIndex != -1 && cursor.getInt(favoriteIndex) == 1;
                 boolean isDeleted = deletedIndex != -1 && cursor.getInt(deletedIndex) == 1;
+                boolean isInDrive = inDriveIndex != -1 && cursor.getInt(inDriveIndex) == 1;
 
                 note = new Note(id, title, content, category, timestamp, priority);
                 note.setFavorite(isFavorite);
+                note.setInDrive(isInDrive); // Set Drive status
 
                 Log.d("DatabaseHelper", "Note found: ID=" + id + ", title=" + title +
                         ", content length=" + content.length() + ", isDeleted=" + isDeleted);
@@ -663,6 +680,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } catch (Exception e) {
             Log.e("DatabaseHelper", "Error checking if note has tags", e);
             return false;
+        }
+    }
+
+    // Method to mark note as uploaded to Drive
+    public void markNoteAsInDrive(int noteId, boolean inDrive) {
+        SQLiteDatabase db = getWritableDatabase();
+        try {
+            ContentValues values = new ContentValues();
+            values.put(KEY_NOTE_IN_DRIVE, inDrive ? 1 : 0);
+
+            db.update(TABLE_NOTES, values, KEY_NOTE_ID + " = ?",
+                    new String[] { String.valueOf(noteId) });
+
+            Log.d("DatabaseHelper", "Note " + noteId + " Drive status updated to: " + inDrive);
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error updating Drive status", e);
         }
     }
 }

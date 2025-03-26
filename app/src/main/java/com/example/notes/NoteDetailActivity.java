@@ -576,6 +576,11 @@ public class NoteDetailActivity extends AppCompatActivity {
                     .addOnSuccessListener(fileId -> {
                         progressDialog.dismiss();
                         Log.d(TAG, "Upload successful, file ID: " + fileId);
+
+                        // Mark the note as in Drive
+                        DatabaseHelper.getInstance(this).markNoteAsInDrive(note.getId(), true);
+                        note.setInDrive(true);
+
                         Toast.makeText(this, R.string.note_uploaded_to_drive, Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(exception -> {
