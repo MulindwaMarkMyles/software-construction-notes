@@ -39,9 +39,6 @@ import java.util.List;
 
 import com.example.notes.drive.DriveActivity;
 
-import android.widget.Toast;
-import android.app.ProgressDialog;
-
 public class NotesListFragment extends Fragment {
 
     private static final String TAG = "NotesListFragment";
@@ -535,68 +532,16 @@ public class NotesListFragment extends Fragment {
     /**
      * Upload note to Google Drive
      */
-    // private void uploadNoteToDrive(Note note) {
-    //     if (getContext() == null)
-    //         return;
-
-    //     // Launch Drive Activity with note ID
-    //     Intent intent = new Intent(getContext(), DriveActivity.class);
-    //     intent.putExtra("noteId", note.getId());
-    //     startActivity(intent);
-    // }
     private void uploadNoteToDrive(Note note) {
-        if (note == null) {
-            Toast.makeText(this, R.string.save_note_first, Toast.LENGTH_SHORT).show();
+        if (getContext() == null)
             return;
-        }
 
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account == null) {
-            // User is not signed in to Google, launch DriveActivity for authentication
-            Log.d(TAG, "No Google account, launching Drive Activity");
-            Intent intent = new Intent(this, DriveActivity.class);
-            intent.putExtra("noteId", note.getId());
-            startActivity(intent);
-        } else {
-            // User is already signed in, use DriveServiceHelper
-            if (driveServiceHelper == null) {
-                Log.d(TAG, "Creating new DriveServiceHelper");
-                driveServiceHelper = new DriveServiceHelper(this, account);
-            }
-
-            // Show progress dialog
-            ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setMessage(getString(R.string.uploading_to_drive));
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setCancelable(false);
-            progressDialog.show();
-
-            // Convert note to text content
-            String noteContent = note.getTitle() + "\n\n" + note.getContent();
-            String fileName = note.getTitle() + ".txt";
-
-            Log.d(TAG, "Uploading note: " + fileName);
-
-            // Upload to Drive
-            driveServiceHelper.createFile(fileName, noteContent)
-                    .addOnSuccessListener(fileId -> {
-                        progressDialog.dismiss();
-                        Log.d(TAG, "Upload successful, file ID: " + fileId);
-
-                        // Mark the note as in Drive
-                        DatabaseHelper.getInstance(this).markNoteAsInDrive(note.getId(), true);
-                        note.setInDrive(true);
-
-                        Toast.makeText(this, R.string.note_uploaded_to_drive, Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(exception -> {
-                        progressDialog.dismiss();
-                        Log.e(TAG, "Couldn't create file", exception);
-                        Toast.makeText(this, R.string.drive_upload_failed + ": " + exception.getMessage(),
-                                Toast.LENGTH_LONG).show();
-                    });
-        }
+        // Launch Drive Activity with note ID
+        Intent intent = new Intent(getContext(), DriveActivity.class);
+        intent.putExtra("noteId", note.getId());
+        startActivity(intent);
     }
+
     /**
      * Share note content via Intent
      */
