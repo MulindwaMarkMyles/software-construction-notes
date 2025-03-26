@@ -235,6 +235,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         } catch (Exception e) {
             Log.e("NoteAdapter", "Error updating tags", e);
         }
+
+        // Log Drive status for debugging
+        for (Note note : notesList) {
+            Log.d("NoteAdapter",
+                    "Note ID: " + note.getId() + ", Title: " + note.getTitle() + ", Drive status: " + note.isInDrive());
+        }
     }
 
     class NoteViewHolder extends RecyclerView.ViewHolder {

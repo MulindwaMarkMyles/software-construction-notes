@@ -37,6 +37,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.notes.drive.DriveActivity;
+
 public class NotesListFragment extends Fragment {
 
     private static final String TAG = "NotesListFragment";
@@ -109,8 +111,7 @@ public class NotesListFragment extends Fragment {
             public void onItemClick(Note note) {
                 try {
                     // Log which note is being opened
-                    Log.d(TAG, "Opening note: ID=" + note.getId() +
-                            ", title=" + note.getTitle() +
+                    Log.d(TAG, "Opening note: ID=" + note.getId() + ", title=" + note.getTitle() +
                             ", content preview="
                             + (note.getContent() != null
                                     ? note.getContent().substring(0, Math.min(20, note.getContent().length())) + "..."
@@ -118,7 +119,7 @@ public class NotesListFragment extends Fragment {
 
                     // Open note detail with this note
                     Intent intent = new Intent(getContext(), NoteDetailActivity.class);
-                    intent.putExtra("noteId", note.getId()); // This is an int
+                    intent.putExtra("noteId", note.getId());
                     startActivity(intent);
                 } catch (Exception e) {
                     Log.e(TAG, "Error opening note details: " + e.getMessage(), e);
@@ -137,8 +138,18 @@ public class NotesListFragment extends Fragment {
 
                 // Handle menu item clicks
                 popup.setOnMenuItemClickListener(item -> {
-                    if (item.getItemId() == R.id.action_tag_user) {
+                    int itemId = item.getItemId();
+                    if (itemId == R.id.action_tag_user) {
                         showTagUserDialog(note);
+                        return true;
+                    } else if (itemId == R.id.action_upload_drive) {
+                        uploadNoteToDrive(note);
+                        return true;
+                    } else if (itemId == R.id.action_share) {
+                        shareNote(note);
+                        return true;
+                    } else if (itemId == R.id.action_delete) {
+                        deleteNote(note);
                         return true;
                     }
                     return false;
@@ -199,7 +210,6 @@ public class NotesListFragment extends Fragment {
     private void performSearch(String query) {
         if (getContext() == null)
             return;
-
         filterNotes(query);
     }
 
@@ -233,8 +243,6 @@ public class NotesListFragment extends Fragment {
         }
 
         if (adapter != null) {
-            updateThemeStatus();
-            updateAdapterTheme();
             adapter.updateList(notesList);
             showEmptyStateIfNeeded(notesList);
         }
@@ -270,7 +278,7 @@ public class NotesListFragment extends Fragment {
             updateAdapterTheme();
         }
 
-        // Refresh notes list when returning to fragment to update tag icons
+        // Refresh notes list when returning to fragment to update tag and drive icons
         refreshNotes();
     }
 
@@ -519,5 +527,118 @@ public class NotesListFragment extends Fragment {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    /**
+     * Upload note to Google Drive
+     */
+    // private void uploadNoteToDrive(Note note) {
+    //     if (getContext() == null)
+    //         return;
+
+    //     // Launch Drive Activity with note ID
+    //     Intent intent = new Intent(getContext(), DriveActivity.class);
+    //     intent.putExtra("noteId", note.getId());
+    //     startActivity(intent);
+    // }
+    private void uploadNoteToDrive(Note note) {
+        if (note == null) {
+            Toast.makeText(this, R.string.save_note_first, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account == null) {
+            // User is not signed in to Google, launch DriveActivity for authentication
+            Log.d(TAG, "No Google account, launching Drive Activity");
+            Intent intent = new Intent(this, DriveActivity.class);
+            intent.putExtra("noteId", note.getId());
+            startActivity(intent);
+        } else {
+            // User is already signed in, use DriveServiceHelper
+            if (driveServiceHelper == null) {
+                Log.d(TAG, "Creating new DriveServiceHelper");
+                driveServiceHelper = new DriveServiceHelper(this, account);
+            }
+
+            // Show progress dialog
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage(getString(R.string.uploading_to_drive));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            // Convert note to text content
+            String noteContent = note.getTitle() + "\n\n" + note.getContent();
+            String fileName = note.getTitle() + ".txt";
+
+            Log.d(TAG, "Uploading note: " + fileName);
+
+            // Upload to Drive
+            driveServiceHelper.createFile(fileName, noteContent)
+                    .addOnSuccessListener(fileId -> {
+                        progressDialog.dismiss();
+                        Log.d(TAG, "Upload successful, file ID: " + fileId);
+
+                        // Mark the note as in Drive
+                        DatabaseHelper.getInstance(this).markNoteAsInDrive(note.getId(), true);
+                        note.setInDrive(true);
+
+                        Toast.makeText(this, R.string.note_uploaded_to_drive, Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(exception -> {
+                        progressDialog.dismiss();
+                        Log.e(TAG, "Couldn't create file", exception);
+                        Toast.makeText(this, R.string.drive_upload_failed + ": " + exception.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    });
+        }
+    }
+    /**
+     * Share note content via Intent
+     */
+    private void shareNote(Note note) {
+        if (getContext() == null)
+            return;
+
+        String shareText = note.getTitle() + "\n\n" + note.getContent();
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, note.getTitle());
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_note)));
+    }
+
+    /**
+     * Delete note with confirmation
+     */
+    private void deleteNote(Note note) {
+        if (getContext() == null)
+            return;
+
+        // Check if user wants confirmation dialogs
+        SettingsManager settingsManager = SettingsManager.getInstance(getContext());
+
+        if (settingsManager.shouldConfirmDelete()) {
+            // Show confirmation dialog
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Move to Trash")
+                    .setMessage("Are you sure you want to move this note to trash?")
+                    .setPositiveButton("Move to Trash", (dialog, which) -> {
+                        // User confirmed, move to trash
+                        DatabaseHelper.getInstance(getContext()).trashNote(note);
+                        Toast.makeText(getContext(), "Note moved to trash", Toast.LENGTH_SHORT).show();
+                        refreshNotes();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } else {
+            // No confirmation needed, move to trash directly
+            DatabaseHelper.getInstance(getContext()).trashNote(note);
+            Toast.makeText(getContext(), "Note moved to trash", Toast.LENGTH_SHORT).show();
+            refreshNotes();
+        }
     }
 }

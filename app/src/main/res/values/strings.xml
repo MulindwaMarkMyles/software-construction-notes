@@ -152,4 +152,11 @@
     <string name="google_auth_error">Google authentication failed. Please try again.</string>
     <string name="note_in_drive">This note has been uploaded to Google Drive</string>
     <string name="default_web_client_id" translatable="false">809010238739-23brh119fpkqmc2qonq1psv5o7a8dsvi.apps.googleusercontent.com</string>
+
+    <!-- Context Menu Actions -->
+    <string name="tag_user">Tag a user</string>
+    <string name="delete_note">Delete note</string>
+    <string name="move_to_trash">Move to Trash</string>
+    <string name="move_to_trash_confirmation">Are you sure you want to move this note to trash?</string>
+    <string name="note_moved_to_trash">Note moved to trash</string>
 </resources>

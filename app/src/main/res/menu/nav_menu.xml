@@ -37,7 +37,7 @@
     <group android:id="@+id/nav_group_other">
         <item
             android:id="@+id/nav_trash"
-            android:icon="@drawable/delete"
+            android:icon="@drawable/delete_image"
             android:title="@string/nav_trash" />
     </group>
 

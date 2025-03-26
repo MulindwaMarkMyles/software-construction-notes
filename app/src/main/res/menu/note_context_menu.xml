@@ -2,5 +2,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_tag_user"
+        android:icon="@drawable/ic_tag"
         android:title="Tag a user" />
+        
+    <item
+        android:id="@+id/action_upload_drive"
+        android:icon="@drawable/ic_drive"
+        android:title="@string/upload_to_drive" />
+        
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share"
+        android:title="@string/share" />
+        
+    <item
+        android:id="@+id/action_delete"
+        android:icon="@drawable/delete"
+        android:title="@string/note_deleted" />
 </menu>
